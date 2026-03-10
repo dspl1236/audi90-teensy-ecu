@@ -42,8 +42,8 @@ static const uint8_t addrPins[16] = {
 };
 
 static const uint8_t dataPins[8] = {
-  PIN_D0, PIN_D1, PIN_D2, PIN_D3,
-  PIN_D4, PIN_D5, PIN_D6, PIN_D7
+  EPROM_D0, EPROM_D1, EPROM_D2, EPROM_D3,
+  EPROM_D4, EPROM_D5, EPROM_D6, EPROM_D7
 };
 
 // ROM buffer pointer (points to romData[] in main.cpp)
@@ -89,14 +89,14 @@ FASTRUN static inline uint16_t readAddress() {
 // Called from ISR — must be fast
 // ---------------------------------------------------------------------------
 FASTRUN static inline void writeData(uint8_t data) {
-  digitalWriteFast(PIN_D0, (data >> 0) & 1);
-  digitalWriteFast(PIN_D1, (data >> 1) & 1);
-  digitalWriteFast(PIN_D2, (data >> 2) & 1);
-  digitalWriteFast(PIN_D3, (data >> 3) & 1);
-  digitalWriteFast(PIN_D4, (data >> 4) & 1);
-  digitalWriteFast(PIN_D5, (data >> 5) & 1);
-  digitalWriteFast(PIN_D6, (data >> 6) & 1);
-  digitalWriteFast(PIN_D7, (data >> 7) & 1);
+  digitalWriteFast(EPROM_D0, (data >> 0) & 1);
+  digitalWriteFast(EPROM_D1, (data >> 1) & 1);
+  digitalWriteFast(EPROM_D2, (data >> 2) & 1);
+  digitalWriteFast(EPROM_D3, (data >> 3) & 1);
+  digitalWriteFast(EPROM_D4, (data >> 4) & 1);
+  digitalWriteFast(EPROM_D5, (data >> 5) & 1);
+  digitalWriteFast(EPROM_D6, (data >> 6) & 1);
+  digitalWriteFast(EPROM_D7, (data >> 7) & 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ FASTRUN static inline void driveDataBus() {
 // ---------------------------------------------------------------------------
 FASTRUN static void oe_isr() {
   // Double-check /CE is also asserted (active LOW)
-  if (digitalReadFast(PIN_CE)) return;   // CE not asserted, ignore
+  if (digitalReadFast(EPROM_CE)) return;   // CE not asserted, ignore
 
   uint16_t addr = readAddress();
 
@@ -173,13 +173,13 @@ void eprom_init(uint8_t* romBuffer, size_t romSize) {
   }
 
   // Control pins — INPUT (ECU drives these)
-  pinMode(PIN_OE, INPUT);
-  pinMode(PIN_CE, INPUT);
+  pinMode(EPROM_OE, INPUT);
+  pinMode(EPROM_CE, INPUT);
 
   // Attach ISR to /OE falling edge (ECU requesting read)
-  attachInterrupt(digitalPinToInterrupt(PIN_OE), oe_isr,         FALLING);
+  attachInterrupt(digitalPinToInterrupt(EPROM_OE), oe_isr,         FALLING);
   // Attach ISR to /OE rising edge (ECU done, release bus)
-  attachInterrupt(digitalPinToInterrupt(PIN_OE), oe_release_isr, RISING);
+  attachInterrupt(digitalPinToInterrupt(EPROM_OE), oe_release_isr, RISING);
 
   Serial.println(F("  EPROM emulator: GPIO interrupt mode"));
   Serial.print(F("  ROM size: "));
