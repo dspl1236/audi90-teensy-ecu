@@ -15,13 +15,14 @@ from ui.gauges_tab       import GaugesTab
 from ui.map_editor_tab   import MapEditorTab
 from ui.rom_manager_tab  import RomManagerTab
 from ui.datalog_tab      import DatalogTab
-from ui.console_tab      import ConsoleTab
+from ui.console_tab          import ConsoleTab
+from ui.hardware_config_tab  import HardwareConfigTab
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Audi 90 2.6L Stroker — Teensy 4.1 Tuner  v1.1.0")
+        self.setWindowTitle("7A 20v Tuner  v1.2.0")
         self.setMinimumSize(1280, 800)
         self.resize(1440, 900)
 
@@ -47,17 +48,19 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
 
-        self.tab_gauges  = GaugesTab()
-        self.tab_maps    = MapEditorTab()
-        self.tab_rom     = RomManagerTab()
-        self.tab_datalog = DatalogTab()
-        self.tab_console = ConsoleTab()
+        self.tab_gauges   = GaugesTab()
+        self.tab_maps     = MapEditorTab()
+        self.tab_rom      = RomManagerTab()
+        self.tab_datalog  = DatalogTab()
+        self.tab_console  = ConsoleTab()
+        self.tab_hardware = HardwareConfigTab()
 
-        self.tabs.addTab(self.tab_gauges,  "Live Gauges")
-        self.tabs.addTab(self.tab_maps,    "Map Editor")
-        self.tabs.addTab(self.tab_rom,     "ROM Manager")
-        self.tabs.addTab(self.tab_datalog, "Datalog")
-        self.tabs.addTab(self.tab_console, "Console")
+        self.tabs.addTab(self.tab_gauges,   "Live Gauges")
+        self.tabs.addTab(self.tab_maps,     "Map Editor")
+        self.tabs.addTab(self.tab_rom,      "ROM Manager")
+        self.tabs.addTab(self.tab_hardware, "Hardware")
+        self.tabs.addTab(self.tab_datalog,  "Datalog")
+        self.tabs.addTab(self.tab_console,  "Console")
 
         root.addWidget(self.conn_panel)
         root.addWidget(self.tabs, 1)
@@ -101,6 +104,7 @@ class MainWindow(QMainWindow):
         self.tab_maps.set_teensy(teensy)
         self.tab_rom.set_teensy(teensy)
         self.tab_console.set_teensy(teensy)
+        self.tab_hardware.set_teensy(teensy)
 
         self.tab_maps.on_connected()
         self.tab_rom.on_connected()
@@ -137,8 +141,8 @@ class MainWindow(QMainWindow):
             "border-top: 1px solid #1a2332; font-size: 11px; }"
         )
 
-        self.lbl_sb_left  = QLabel("Audi 90 2.6L Stroker  |  Teensy 4.1  |  893906266D")
-        self.lbl_sb_right = QLabel("v1.1.0")
+        self.lbl_sb_left  = QLabel("7A 20v Tuner  |  Teensy 4.1  |  893906266D")
+        self.lbl_sb_right = QLabel("v1.2.0")
         self.lbl_sb_left.setStyleSheet("color: #3d5068; padding: 0 8px;")
         self.lbl_sb_right.setStyleSheet("color: #3d5068; padding: 0 8px;")
 

@@ -17,8 +17,8 @@ def main():
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
     app = QApplication(sys.argv)
-    app.setApplicationName("Audi90 Tuner")
-    app.setApplicationVersion("1.1.0")
+    app.setApplicationName("7A 20v Tuner")
+    app.setApplicationVersion("1.2.0")
     app.setOrganizationName("dspl1236")
 
     # Dark stylesheet
