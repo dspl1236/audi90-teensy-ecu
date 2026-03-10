@@ -21,16 +21,24 @@ jobs:
         run: pip install platformio
 
       - name: Build Teensy Full firmware
-        run: pio run --project-dir firmware -e teensy41
+        run: pio run -e teensy41
+        working-directory: firmware
 
       - name: Build Teensy Lite firmware
-        run: pio run --project-dir firmware -c firmware/platformio_lite.ini -e teensy_lite
+        run: pio run -c platformio_lite.ini -e teensy_lite
+        working-directory: firmware
 
       - name: Collect hex files
         run: |
           mkdir -p firmware_out
-          cp firmware/.pio/build/teensy41/firmware.hex  firmware_out/teensy_full.hex
-          cp firmware/.pio/build/teensy_lite/firmware.hex firmware_out/teensy_lite.hex
+          FULL=$(find . -path "*/teensy41/firmware.hex" 2>/dev/null | head -1)
+          LITE=$(find . -path "*/teensy_lite/firmware.hex" 2>/dev/null | head -1)
+          echo "Full hex: $FULL"
+          echo "Lite hex: $LITE"
+          [ -n "$FULL" ] || (echo "ERROR: teensy41 hex not found"; exit 1)
+          [ -n "$LITE" ] || (echo "ERROR: teensy_lite hex not found"; exit 1)
+          cp "$FULL" firmware_out/teensy_full.hex
+          cp "$LITE" firmware_out/teensy_lite.hex
           ls -lh firmware_out/
 
       - name: Upload firmware artifacts
