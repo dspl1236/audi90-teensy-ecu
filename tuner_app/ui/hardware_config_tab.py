@@ -332,13 +332,13 @@ class HardwareConfigTab(QWidget):
                 f"Map addresses updated."
             )
             self._update_map_table(ver)
-            # Override the version if no ROM is loaded
             if not self._detection:
                 self.lbl_version.setText(ver)
         except Exception as e:
             QMessageBox.critical(self, "Load Error", str(e))
 
-
+    def _load_rom_for_detection(self):
+        """Open a ROM file and run ECU version detection on it."""
         path, _ = QFileDialog.getOpenFileName(
             self, "Load ROM for ECU Detection", "",
             "ROM Files (*.034 *.bin *.ecu);;All Files (*)"
