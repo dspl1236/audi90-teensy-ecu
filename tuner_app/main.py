@@ -18,7 +18,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setApplicationName("Audi90 Tuner")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion("1.0.1")
     app.setOrganizationName("dspl1236")
 
     # Dark stylesheet
@@ -47,10 +47,9 @@ QTabBar::tab {
     background: #0d1117;
     color: #3d5068;
     border: 1px solid #1a2332;
-    padding: 8px 20px;
+    padding: 8px 16px;
     font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
+    min-width: 150px;
 }
 
 QTabBar::tab:selected {

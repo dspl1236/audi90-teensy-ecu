@@ -21,7 +21,7 @@ from ui.console_tab      import ConsoleTab
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Audi 90 2.6L Stroker — Teensy 4.1 Tuner  v1.0")
+        self.setWindowTitle("Audi 90 2.6L Stroker — Teensy 4.1 Tuner  v1.0.1")
         self.setMinimumSize(1280, 800)
         self.resize(1440, 900)
 
@@ -53,11 +53,11 @@ class MainWindow(QMainWindow):
         self.tab_datalog = DatalogTab()
         self.tab_console = ConsoleTab()
 
-        self.tabs.addTab(self.tab_gauges,  "📊  Live Gauges")
-        self.tabs.addTab(self.tab_maps,    "🗺   Map Editor")
-        self.tabs.addTab(self.tab_rom,     "💾  ROM / Corrections")
-        self.tabs.addTab(self.tab_datalog, "📈  Datalog")
-        self.tabs.addTab(self.tab_console, "🖥   Console")
+        self.tabs.addTab(self.tab_gauges,  "Live Gauges")
+        self.tabs.addTab(self.tab_maps,    "Map Editor")
+        self.tabs.addTab(self.tab_rom,     "ROM / Corrections")
+        self.tabs.addTab(self.tab_datalog, "Datalog")
+        self.tabs.addTab(self.tab_console, "Console")
 
         root.addWidget(self.conn_panel)
         root.addWidget(self.tabs, 1)
@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
         )
 
         self.lbl_sb_left  = QLabel("Audi 90 2.6L Stroker  |  Teensy 4.1  |  893906266D")
-        self.lbl_sb_right = QLabel("v1.0.0")
+        self.lbl_sb_right = QLabel("v1.0.1")
         self.lbl_sb_left.setStyleSheet("color: #3d5068; padding: 0 8px;")
         self.lbl_sb_right.setStyleSheet("color: #3d5068; padding: 0 8px;")
 
