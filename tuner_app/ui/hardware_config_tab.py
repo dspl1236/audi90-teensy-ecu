@@ -419,8 +419,8 @@ class HardwareConfigTab(QWidget):
         if p:
             self.lbl_maf_notes.setText(p.notes)
             disp = self.spn_displacement.value()
-            scalar = get_maf_scalar(key, disp / 2300.0)
-            self.lbl_maf_scalar.setText(f"×{scalar:.3f}")
+            scalar = get_maf_scalar(key, disp)
+            self.lbl_maf_scalar.setText(f"x{scalar:.3f}")
         self._on_config_changed()
 
     def _on_injector_changed(self):
@@ -429,7 +429,7 @@ class HardwareConfigTab(QWidget):
         if p:
             self.lbl_inj_notes.setText(p.notes)
             self.lbl_inj_scalar.setText(
-                f"×{p.scalar:.3f}  ({'no change' if p.scalar == 1.0 else 'rescale fuel map'})"
+                f"x{p.scalar_from_stock:.3f}  ({'no change' if p.cc_per_min == 225 else 'rescale fuel map'})"
             )
         self._on_config_changed()
 
