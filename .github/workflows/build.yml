@@ -31,15 +31,13 @@ jobs:
       - name: Collect hex files
         run: |
           mkdir -p firmware_out
-          FULL=$(find . -path "*/teensy41/firmware.hex" 2>/dev/null | head -1)
-          LITE=$(find . -path "*/teensy_lite/firmware.hex" 2>/dev/null | head -1)
-          echo "Full hex: $FULL"
-          echo "Lite hex: $LITE"
-          [ -n "$FULL" ] || (echo "ERROR: teensy41 hex not found"; exit 1)
-          [ -n "$LITE" ] || (echo "ERROR: teensy_lite hex not found"; exit 1)
-          cp "$FULL" firmware_out/teensy_full.hex
-          cp "$LITE" firmware_out/teensy_lite.hex
-          ls -lh firmware_out/
+          echo "=== Recursive hex search from repo root ==="
+          find . -name "*.hex" 2>/dev/null | sort
+          echo "=== Check exact expected paths ==="
+          ls -la firmware/.pio/build/teensy41/ 2>/dev/null || echo "firmware/.pio/build/teensy41/ NOT FOUND"
+          ls -la firmware/.pio/build/teensy_lite/ 2>/dev/null || echo "firmware/.pio/build/teensy_lite/ NOT FOUND"
+          echo "=== Check if .pio is at repo root ==="
+          ls -la .pio/build/ 2>/dev/null || echo ".pio/build/ NOT FOUND at repo root"
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
