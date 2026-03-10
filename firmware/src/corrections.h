@@ -1,4 +1,5 @@
 #pragma once
+#include <Arduino.h>
 // corrections.h — closed-loop fuel trim and knock retard
 
 void  corrections_init();

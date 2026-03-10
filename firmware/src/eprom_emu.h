@@ -35,10 +35,10 @@ void eprom_diagnostics();   // Print last N address reads to Serial
 
 // Address and data pin arrays for fast digitalRead/Write
 static const uint8_t addrPins[16] = {
-  PIN_A0,  PIN_A1,  PIN_A2,  PIN_A3,
-  PIN_A4,  PIN_A5,  PIN_A6,  PIN_A7,
-  PIN_A8,  PIN_A9,  PIN_A10, PIN_A11,
-  PIN_A12, PIN_A13, PIN_A14, PIN_A15
+  EPROM_A0,  EPROM_A1,  EPROM_A2,  EPROM_A3,
+  EPROM_A4,  EPROM_A5,  EPROM_A6,  EPROM_A7,
+  EPROM_A8,  EPROM_A9,  EPROM_A10, EPROM_A11,
+  EPROM_A12, EPROM_A13, EPROM_A14, EPROM_A15
 };
 
 static const uint8_t dataPins[8] = {
@@ -65,22 +65,22 @@ static volatile uint32_t totalReads = 0;
 FASTRUN static inline uint16_t readAddress() {
   uint16_t addr = 0;
   // Direct GPIO reads — each digitalReadFast() is ~1 cycle at 600MHz
-  addr |= (uint16_t)digitalReadFast(PIN_A0)  << 0;
-  addr |= (uint16_t)digitalReadFast(PIN_A1)  << 1;
-  addr |= (uint16_t)digitalReadFast(PIN_A2)  << 2;
-  addr |= (uint16_t)digitalReadFast(PIN_A3)  << 3;
-  addr |= (uint16_t)digitalReadFast(PIN_A4)  << 4;
-  addr |= (uint16_t)digitalReadFast(PIN_A5)  << 5;
-  addr |= (uint16_t)digitalReadFast(PIN_A6)  << 6;
-  addr |= (uint16_t)digitalReadFast(PIN_A7)  << 7;
-  addr |= (uint16_t)digitalReadFast(PIN_A8)  << 8;
-  addr |= (uint16_t)digitalReadFast(PIN_A9)  << 9;
-  addr |= (uint16_t)digitalReadFast(PIN_A10) << 10;
-  addr |= (uint16_t)digitalReadFast(PIN_A11) << 11;
-  addr |= (uint16_t)digitalReadFast(PIN_A12) << 12;
-  addr |= (uint16_t)digitalReadFast(PIN_A13) << 13;
-  addr |= (uint16_t)digitalReadFast(PIN_A14) << 14;
-  addr |= (uint16_t)digitalReadFast(PIN_A15) << 15;
+  addr |= (uint16_t)digitalReadFast(EPROM_A0)  << 0;
+  addr |= (uint16_t)digitalReadFast(EPROM_A1)  << 1;
+  addr |= (uint16_t)digitalReadFast(EPROM_A2)  << 2;
+  addr |= (uint16_t)digitalReadFast(EPROM_A3)  << 3;
+  addr |= (uint16_t)digitalReadFast(EPROM_A4)  << 4;
+  addr |= (uint16_t)digitalReadFast(EPROM_A5)  << 5;
+  addr |= (uint16_t)digitalReadFast(EPROM_A6)  << 6;
+  addr |= (uint16_t)digitalReadFast(EPROM_A7)  << 7;
+  addr |= (uint16_t)digitalReadFast(EPROM_A8)  << 8;
+  addr |= (uint16_t)digitalReadFast(EPROM_A9)  << 9;
+  addr |= (uint16_t)digitalReadFast(EPROM_A10) << 10;
+  addr |= (uint16_t)digitalReadFast(EPROM_A11) << 11;
+  addr |= (uint16_t)digitalReadFast(EPROM_A12) << 12;
+  addr |= (uint16_t)digitalReadFast(EPROM_A13) << 13;
+  addr |= (uint16_t)digitalReadFast(EPROM_A14) << 14;
+  addr |= (uint16_t)digitalReadFast(EPROM_A15) << 15;
   return addr;
 }
 

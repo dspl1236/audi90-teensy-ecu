@@ -41,10 +41,10 @@ struct InjectorState {
 };
 
 static InjectorState inj[4] = {
-  { .sensePin = 24, .gatePin = PIN_INJ1 },
-  { .sensePin = 25, .gatePin = PIN_INJ2 },
-  { .sensePin = 26, .gatePin = PIN_INJ3 },
-  { .sensePin = 27, .gatePin = PIN_INJ4 },
+  { .sensePin = 24, .gatePin = PIN_INJ0 },
+  { .sensePin = 25, .gatePin = PIN_INJ1 },
+  { .sensePin = 26, .gatePin = PIN_INJ2 },
+  { .sensePin = 27, .gatePin = PIN_INJ3 },
 };
 // NOTE: Sense pins 24–27 are placeholders — assign based on ECU wiring harness.
 // These are separate from gate pins and tap the ECU injector output signal.
