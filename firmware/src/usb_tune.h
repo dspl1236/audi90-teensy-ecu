@@ -28,6 +28,7 @@
 
 #pragma once
 #include <Arduino.h>
+#include <SD.h>
 
 // ── Stream interval ───────────────────────────────────────────────────────
 #define USB_STREAM_HZ      10     // Live data frames per second
@@ -116,6 +117,43 @@ static void _stream_data() {
         g_knock_v,
         g_knock_retard
     );
+}
+
+// ── CRC32 helper (ISO 3309 / Ethernet polynomial) ────────────────────────────
+static uint32_t _crc32_update(uint32_t crc, uint8_t byte) {
+    crc ^= byte;
+    for (int i = 0; i < 8; i++)
+        crc = (crc >> 1) ^ (crc & 1 ? 0xEDB88320u : 0u);
+    return crc;
+}
+
+// ── Read a newline-terminated line with timeout (ms). Returns length or -1. ──
+static int _read_line_timeout(char* buf, int maxlen, uint32_t timeout_ms) {
+    uint32_t deadline = millis() + timeout_ms;
+    int len = 0;
+    while (millis() < deadline) {
+        while (Serial.available()) {
+            char c = Serial.read();
+            if (c == '\n' || c == '\r') {
+                if (len > 0) { buf[len] = '\0'; return len; }
+            } else if (len < maxlen - 1) {
+                buf[len++] = c;
+            }
+        }
+        delayMicroseconds(100);
+    }
+    return -1;
+}
+
+// ── Read exactly 'count' raw bytes with timeout. Returns bytes read. ─────────
+static int _read_bytes_timeout(uint8_t* buf, int count, uint32_t timeout_ms) {
+    uint32_t deadline = millis() + timeout_ms;
+    int got = 0;
+    while (got < count && millis() < deadline) {
+        if (Serial.available()) buf[got++] = Serial.read();
+        else delayMicroseconds(50);
+    }
+    return got;
 }
 
 // ── Command dispatcher ────────────────────────────────────────────────────
@@ -212,6 +250,117 @@ static void _process_command(const char* cmd) {
         } else {
             Serial.println("ERR:AFR_RANGE");
         }
+        return;
+    }
+
+    // CMD:ROM_DOWNLOAD,filename
+    // Sends the full .bin from SD card to PC in 256-byte chunks with CRC32
+    if (strncmp(cmd, "CMD:ROM_DOWNLOAD,", 17) == 0) {
+        const char* fname = cmd + 17;
+        // Open file from SD
+        File f = SD.open(fname, FILE_READ);
+        if (!f) {
+            Serial.printf("ERR:ROM_NOT_FOUND,%s\n", fname);
+            return;
+        }
+        uint32_t fsize = f.size();
+        // Send transfer start header
+        Serial.printf("XFER:START,%s,%lu\n", fname, fsize);
+
+        uint8_t  chunk_buf[256];
+        uint32_t crc    = 0;
+        uint32_t offset = 0;
+        int      idx    = 0;
+        while (offset < fsize) {
+            int len = f.read(chunk_buf, 256);
+            if (len <= 0) break;
+            // Update CRC
+            for (int i = 0; i < len; i++) crc = _crc32_update(crc, chunk_buf[i]);
+            // Send chunk header then raw bytes
+            Serial.printf("XFER:CHUNK,%d,%d\n", idx, len);
+            Serial.write(chunk_buf, len);
+            Serial.write('\n');
+            Serial.flush();
+            offset += len;
+            idx++;
+            delay(2);  // Small delay so PC can keep up
+        }
+        f.close();
+        crc ^= 0xFFFFFFFF;
+        Serial.printf("XFER:END,%lu\n", crc);
+        return;
+    }
+
+    // CMD:ROM_UPLOAD,filename,size
+    // Receives a full .bin from PC and writes it to SD card
+    if (strncmp(cmd, "CMD:ROM_UPLOAD,", 15) == 0) {
+        char  fname[32] = {0};
+        uint32_t expected_size = 0;
+        if (sscanf(cmd + 15, "%31[^,],%lu", fname, &expected_size) != 2) {
+            Serial.println("ERR:ROM_UPLOAD_PARSE");
+            return;
+        }
+        if (expected_size == 0 || expected_size > 65536) {
+            Serial.println("ERR:ROM_UPLOAD_SIZE");
+            return;
+        }
+
+        Serial.println("ACK:ROM_UPLOAD_READY");
+
+        // Now receive chunks until XFER:DONE,crc
+        File f = SD.open(fname, FILE_WRITE | O_TRUNC);
+        if (!f) {
+            Serial.printf("ERR:ROM_UPLOAD_OPEN,%s\n", fname);
+            return;
+        }
+
+        char     line_buf[64];
+        uint8_t  chunk_buf[256];
+        uint32_t rx_crc = 0;
+        uint32_t rx_bytes = 0;
+        bool     ok = true;
+        uint32_t timeout_ms = millis() + 30000;  // 30s total timeout
+
+        while (millis() < timeout_ms) {
+            // Read a line (header or XFER:DONE)
+            int line_len = _read_line_timeout(line_buf, sizeof(line_buf), 5000);
+            if (line_len < 0) { ok = false; break; }
+
+            if (strncmp(line_buf, "XFER:DONE,", 10) == 0) {
+                uint32_t expected_crc = strtoul(line_buf + 10, nullptr, 10);
+                rx_crc ^= 0xFFFFFFFF;
+                if (rx_crc == expected_crc) {
+                    f.flush();
+                    f.close();
+                    Serial.println("ACK:ROM_UPLOAD_COMPLETE");
+                } else {
+                    f.close();
+                    Serial.printf("ERR:ROM_UPLOAD_CRC,%lu,%lu\n", expected_crc, rx_crc);
+                }
+                return;
+            }
+
+            if (strncmp(line_buf, "XFER:CHUNK,", 11) == 0) {
+                int  chunk_idx = 0;
+                int  chunk_len = 0;
+                sscanf(line_buf + 11, "%d,%d", &chunk_idx, &chunk_len);
+                if (chunk_len <= 0 || chunk_len > 256) { ok = false; break; }
+
+                // Read exactly chunk_len bytes + trailing \n
+                int got = _read_bytes_timeout(chunk_buf, chunk_len, 3000);
+                if (got != chunk_len) { ok = false; break; }
+                Serial.read();  // consume trailing \n
+
+                f.write(chunk_buf, chunk_len);
+                for (int i = 0; i < chunk_len; i++) rx_crc = _crc32_update(rx_crc, chunk_buf[i]);
+                rx_bytes += chunk_len;
+                timeout_ms = millis() + 10000;  // reset per-chunk timeout
+                continue;
+            }
+        }
+
+        f.close();
+        if (!ok) Serial.println("ERR:ROM_UPLOAD_TIMEOUT");
         return;
     }
 

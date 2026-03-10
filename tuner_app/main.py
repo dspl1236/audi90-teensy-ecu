@@ -18,7 +18,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setApplicationName("Audi90 Tuner")
-    app.setApplicationVersion("1.0.1")
+    app.setApplicationVersion("1.1.0")
     app.setOrganizationName("dspl1236")
 
     # Dark stylesheet

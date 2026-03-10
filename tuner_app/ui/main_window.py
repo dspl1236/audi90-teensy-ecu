@@ -13,7 +13,7 @@ from PyQt5.QtGui import QFont
 from ui.connection_panel import ConnectionPanel
 from ui.gauges_tab       import GaugesTab
 from ui.map_editor_tab   import MapEditorTab
-from ui.rom_tab          import RomTab
+from ui.rom_manager_tab  import RomManagerTab
 from ui.datalog_tab      import DatalogTab
 from ui.console_tab      import ConsoleTab
 
@@ -21,7 +21,7 @@ from ui.console_tab      import ConsoleTab
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Audi 90 2.6L Stroker — Teensy 4.1 Tuner  v1.0.1")
+        self.setWindowTitle("Audi 90 2.6L Stroker — Teensy 4.1 Tuner  v1.1.0")
         self.setMinimumSize(1280, 800)
         self.resize(1440, 900)
 
@@ -49,13 +49,13 @@ class MainWindow(QMainWindow):
 
         self.tab_gauges  = GaugesTab()
         self.tab_maps    = MapEditorTab()
-        self.tab_rom     = RomTab()
+        self.tab_rom     = RomManagerTab()
         self.tab_datalog = DatalogTab()
         self.tab_console = ConsoleTab()
 
         self.tabs.addTab(self.tab_gauges,  "Live Gauges")
         self.tabs.addTab(self.tab_maps,    "Map Editor")
-        self.tabs.addTab(self.tab_rom,     "ROM / Corrections")
+        self.tabs.addTab(self.tab_rom,     "ROM Manager")
         self.tabs.addTab(self.tab_datalog, "Datalog")
         self.tabs.addTab(self.tab_console, "Console")
 
@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
         )
 
         self.lbl_sb_left  = QLabel("Audi 90 2.6L Stroker  |  Teensy 4.1  |  893906266D")
-        self.lbl_sb_right = QLabel("v1.0.1")
+        self.lbl_sb_right = QLabel("v1.1.0")
         self.lbl_sb_left.setStyleSheet("color: #3d5068; padding: 0 8px;")
         self.lbl_sb_right.setStyleSheet("color: #3d5068; padding: 0 8px;")
 
