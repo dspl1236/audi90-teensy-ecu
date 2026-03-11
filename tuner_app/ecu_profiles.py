@@ -646,7 +646,7 @@ class InjectorProfile:
         Pressure-normalized at 4.0 bar (stock 7A rail pressure).
         scalar = stock_cc_at_4bar / this_cc_at_4bar
         """
-        stock_cc = 302.0  # Stock 7A @ 4.0 bar (already at reference pressure)
+        stock_cc = 305.0 * __import__('math').sqrt(4.0 / 3.0)  # 305cc @ 3bar → normalized to 4bar
         return round(stock_cc / self.cc_at_4bar, 4)
 
     def scalar_from(self, other: "InjectorProfile") -> float:
@@ -654,35 +654,39 @@ class InjectorProfile:
         return round(other.cc_at_4bar / self.cc_at_4bar, 4)
 
 
-# Pressure normalization:
-#   Stock 7A: Bosch 0 280 150 715  302cc @ 4.0 bar  (already at reference)
-#   440cc @ 3.0 bar  -> 440 x sqrt(4.0/3.0) = 508.4cc @ 4.0 bar
-#   550cc @ 3.0 bar  -> 550 x sqrt(4.0/3.0) = 635.1cc @ 4.0 bar
-#   Scale stock->440:  302 / 508.4 = 0.594
-#   Scale stock->550:  302 / 635.1 = 0.476
+# Pressure normalization (Bosch test standard = 3.0 bar; FPR 054133534 = 4.0 bar differential):
+#   All injectors normalized to 4.0 bar for consistent comparison.
+#   Stock 7A: Bosch 0 280 150 715  305cc @ 3.0 bar  -> 352.2cc @ 4.0 bar
+#   440cc:                          440cc @ 3.0 bar  -> 508.1cc @ 4.0 bar
+#   550cc (034 Stage 2 EV14):       550cc @ 3.0 bar  -> 635.1cc @ 4.0 bar
+#   Scale stock->440:  352.2 / 508.1 = 0.6932
+#   Scale stock->550:  352.2 / 635.1 = 0.5545
+#   NOTE: FPR is vacuum-referenced so differential pressure across injector
+#   is constant at 4 bar regardless of manifold pressure. The 3 bar figure
+#   is only the Bosch catalog test pressure — not the operating pressure.
 
 INJECTOR_PROFILES: Dict[str, InjectorProfile] = {
     "STOCK_7A": InjectorProfile(
         name="STOCK_7A",
-        display="Stock 7A  (302cc @ 4.0 bar)",
-        cc_per_min=302,
-        rated_bar=4.0,
+        display="Stock 7A  (305cc @ 3.0 bar)",
+        cc_per_min=305,
+        rated_bar=3.0,
         part_number="Bosch 0 280 150 715",
-        notes="Factory 7A injector. 302cc rated @ 4.0 bar. Reference pressure for all scaling."
+        notes="Factory 7A injector. 305cc @ 3.0 bar Bosch test standard. 352cc @ 4.0 bar (operating pressure)."
     ),
     "CC440": InjectorProfile(
         name="CC440",
         display="440cc  (@ 3.0 bar)",
         cc_per_min=440,
         rated_bar=3.0,
-        notes="440cc @ 3.0 bar = 508cc @ 4.0 bar.  Fuel map scale vs stock: x0.594"
+        notes="440cc @ 3.0 bar = 508cc @ 4.0 bar.  Fuel map scale vs stock 7A: x0.6932"
     ),
     "CC550": InjectorProfile(
         name="CC550",
         display="550cc  (@ 3.0 bar)",
         cc_per_min=550,
         rated_bar=3.0,
-        notes="034 Stage 2.  550cc @ 3.0 bar = 635cc @ 4.0 bar.  Fuel map scale vs stock: x0.476"
+        notes="034 Stage 2 EV14.  550cc @ 3.0 bar = 635cc @ 4.0 bar.  Fuel map scale vs stock 7A: x0.5545"
     ),
 }
 
