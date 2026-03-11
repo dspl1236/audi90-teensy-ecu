@@ -26,7 +26,7 @@ from ecu_profiles import (
     RPM_AXIS_266D, LOAD_AXIS_266D,
     FUEL_DATA_FACTOR, FUEL_DATA_OFFSET, FUEL_DATA_SIGNED,
     apply_checksum, verify_checksum,
-    detect_ecu_version,
+    detect_ecu_version, KNOWN_ROM_LIBRARY, ECU_MAPS,
 )
 
 FUEL_MAP_ADDR   = 0x0000   # 266D Primary Fueling  — 16×16 = 256 bytes (native ROM space)
@@ -432,7 +432,53 @@ class OfflineRomEditor(QWidget):
         ml.addWidget(self.maf_table)
         self.maf_tab_idx = self.map_tabs.addTab(self.maf_widget, "MAF Lin (266B)")
 
+        # ── ECU detection info strip ──────────────────────────────────────
+        info_row = QHBoxLayout()
+        info_row.setContentsMargins(0, 2, 0, 2)
+
+        self.lbl_ecu_version = QLabel("ECU: —")
+        self.lbl_ecu_version.setStyleSheet(
+            "color:#2dff6e; font-size:12px; font-weight:bold; padding:2px 8px 2px 0;")
+        self.lbl_ecu_confidence = QLabel("")
+        self.lbl_ecu_confidence.setStyleSheet(
+            "color:#3d5068; font-size:11px; padding:2px 8px 2px 0;")
+        self.lbl_ecu_crc = QLabel("")
+        self.lbl_ecu_crc.setStyleSheet(
+            "color:#3d5068; font-size:11px; font-family:monospace; padding:2px 8px 2px 0;")
+        self.lbl_ecu_cal = QLabel("")
+        self.lbl_ecu_cal.setStyleSheet(
+            "color:#7a9ab0; font-size:11px; padding:2px 8px 2px 0;")
+
+        self.btn_map_addrs = QPushButton("Map Addresses ▼")
+        self.btn_map_addrs.setFlat(True)
+        self.btn_map_addrs.setStyleSheet(
+            "QPushButton { color:#3d5068; font-size:10px; border:none; padding:0 4px; }"
+            "QPushButton:hover { color:#7a9ab0; }")
+        self.btn_map_addrs.setCheckable(True)
+        self.btn_map_addrs.setChecked(False)
+        self.btn_map_addrs.toggled.connect(self._toggle_map_addrs)
+
+        info_row.addWidget(self.lbl_ecu_version)
+        info_row.addWidget(self.lbl_ecu_confidence)
+        info_row.addWidget(self.lbl_ecu_crc)
+        info_row.addWidget(self.lbl_ecu_cal)
+        info_row.addStretch()
+        info_row.addWidget(self.btn_map_addrs)
+
+        from PyQt5.QtWidgets import QTextEdit as _QTE
+        from PyQt5.QtGui import QFont as _QFont
+        self.wgt_map_addrs = _QTE()
+        self.wgt_map_addrs.setReadOnly(True)
+        self.wgt_map_addrs.setMaximumHeight(130)
+        self.wgt_map_addrs.setFont(_QFont("Courier New", 10))
+        self.wgt_map_addrs.setStyleSheet(
+            "QTextEdit { background:#060a0f; border:1px solid #1a2332; "
+            "color:#7a9ab0; font-family:'Courier New',monospace; font-size:10px; }")
+        self.wgt_map_addrs.setVisible(False)
+
         root.addLayout(toolbar)
+        root.addLayout(info_row)
+        root.addWidget(self.wgt_map_addrs)
         root.addWidget(self.map_tabs, 1)
 
     # File I/O
@@ -451,6 +497,7 @@ class OfflineRomEditor(QWidget):
 
         result = detect_ecu_version(self._romdata[:32768])
         self._ecu_version = result.version
+        self._update_ecu_info(result)
         is_266b = (self._ecu_version == "266B")
         rom = self._romdata
 
@@ -652,6 +699,42 @@ class OfflineRomEditor(QWidget):
             self.lbl_file.setStyleSheet("color: #2dff6e; font-size: 11px;")
         except Exception as e:
             QMessageBox.critical(self, "Save Error", str(e))
+
+    def _toggle_map_addrs(self, checked: bool):
+        self.wgt_map_addrs.setVisible(checked)
+        self.btn_map_addrs.setText("Map Addresses ▲" if checked else "Map Addresses ▼")
+
+    def _update_ecu_info(self, result):
+        """Update the detection info strip from a DetectionResult."""
+        import zlib
+        conf_color = {"HIGH": "#2dff6e", "MEDIUM": "#ff9900"}.get(
+            result.confidence, "#ff6666")
+        self.lbl_ecu_version.setText(f"ECU: {result.version}")
+        self.lbl_ecu_version.setStyleSheet(
+            f"color:{conf_color}; font-size:12px; font-weight:bold; padding:2px 8px 2px 0;")
+        self.lbl_ecu_confidence.setText(
+            f"{result.confidence}  ({result.method})")
+        self.lbl_ecu_crc.setText(
+            f"CRC32: {result.crc32:#010x}" if result.crc32 else "")
+        cal_parts = []
+        if result.cal_name:   cal_parts.append(result.cal_name)
+        if result.part_number: cal_parts.append(result.part_number)
+        self.lbl_ecu_cal.setText("  ·  ".join(cal_parts))
+
+        # Populate map address table
+        maps = ECU_MAPS.get(result.version)
+        if maps:
+            lines = [f"  {'MAP NAME':<36} {'DATA':>6}  {'X-AX':>6}  {'Y-AX':>6}  {'SZ':>5}  TYPE"]
+            lines.append("  " + "-" * 68)
+            for m in maps:
+                x = f"0x{m.xaxis_addr:04X}" if m.xaxis_addr else "  —  "
+                y = f"0x{m.yaxis_addr:04X}" if m.yaxis_addr else "  —  "
+                t = "scalar" if m.is_scalar else (f"16x16" if m.is_2d else f"1x{m.cols}")
+                lines.append(
+                    f"  {m.name:<36} 0x{m.data_addr:04X}  {x}  {y}  {m.size:>4}B  {t}")
+            self.wgt_map_addrs.setPlainText("\n".join(lines))
+        else:
+            self.wgt_map_addrs.setPlainText("No map table for this ECU version.")
 
     def _on_edit(self, *_):
         if not self._dirty:
