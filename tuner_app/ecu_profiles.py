@@ -3,6 +3,19 @@ ecu_profiles.py  —  7A 20v Tuner  v1.4.0
 =========================================
 ECU version detection, complete map address tables, and hardware profiles.
 
+DATA SOURCES & CREDITS
+=======================
+Map addresses, display formulas, the .034 bit-scramble algorithm, and checksum
+parameters in this file were derived from 034 Motorsport's RIP Chip tool for
+Hitachi ECUs (ECUGUI.jar / CustomizedStore.jar, installer version 1.0.0).
+
+The .ecu definition files (7A_Late_Generic_1.01.ecu, 7A_Early_Generic_1.06.ecu)
+are Java-serialised objects bundled with their software. They were deserialised
+and cross-referenced against live ROM data to produce the tables below.
+
+This project is personal and non-commercial. See CREDITS.md for full details.
+034 Motorsport: https://store.034motorsport.com
+
 SUPPORTED ECU VERSIONS
 ======================
 893 906 266 B  —  Early 7A, 2-connector (Audi 80/90/Coupe ~1988-1989)
