@@ -21,9 +21,12 @@ from PyQt5.QtGui import QColor, QBrush
 from ui.map_editor_tab import MapTable, ROWS, COLS
 from ecu_profiles import (
     unscramble_rom, raw_to_display, display_to_raw,
+    raw_to_lambda, lambda_to_raw,
     read_rpm_axis_from_rom, read_load_axis_from_rom,
     RPM_AXIS_266D, LOAD_AXIS_266D,
     FUEL_DATA_FACTOR, FUEL_DATA_OFFSET, FUEL_DATA_SIGNED,
+    apply_checksum, verify_checksum,
+    detect_ecu_version,
 )
 
 FUEL_MAP_ADDR   = 0x0000   # 266D Primary Fueling  — 16×16 = 256 bytes (native ROM space)
@@ -274,6 +277,7 @@ class OfflineRomEditor(QWidget):
         Handles both:
           - Raw .bin files from Teensy (native ECU bytes, no scrambling)
           - .034 files from 034EFI RIP Chip tool (bit-scrambled; auto-detected by extension)
+        Automatically detects 266B vs 266D and applies the correct fuel formula.
         """
         # Auto-detect and unscramble .034 files
         is_034 = filepath and filepath.lower().endswith('.034')
@@ -287,48 +291,80 @@ class OfflineRomEditor(QWidget):
         self._dirty   = False
         self._is_034  = is_034
 
-        # Decode fuel map: signed byte + 128 → display value
-        raw_fuel = list(self._romdata[FUEL_MAP_ADDR:FUEL_MAP_ADDR + MAP_SIZE])
-        fuel_display = [raw_to_display(b) for b in raw_fuel]
+        # Detect ECU version for correct fuel formula
+        result = detect_ecu_version(self._romdata[:32768])
+        self._ecu_version = result.version
+        is_266b = (self._ecu_version == "266B")
 
-        # Decode timing map: unsigned byte = degrees BTDC (factor=1.0, offset=0.0)
+        # Decode fuel map with version-appropriate formula
+        raw_fuel = list(self._romdata[FUEL_MAP_ADDR:FUEL_MAP_ADDR + MAP_SIZE])
+        if is_266b:
+            from ecu_profiles import raw_to_lambda
+            fuel_display = [raw_to_lambda(b) for b in raw_fuel]
+            fuel_label = "Fuel Map (Lambda) — 266B  |  display = signed*0.007813 + 1.0  |  1.000=stoich"
+        else:
+            fuel_display = [raw_to_display(b) for b in raw_fuel]
+            fuel_label = "Fuel Map — 266D  |  display = signed + 128  |  Stock: 40–123"
+
+        # Timing map: unsigned bytes = degrees BTDC (both versions)
         timing_data = list(self._romdata[TIMING_MAP_ADDR:TIMING_MAP_ADDR + MAP_SIZE])
 
-        self.fuel_table.load_data([int(v) for v in fuel_display])
+        self.fuel_table.load_data([round(v, 3) if is_266b else int(v) for v in fuel_display])
         self.timing_table.load_data(timing_data)
+
+        # Verify checksum
+        cs_ok = verify_checksum(bytes(self._romdata[:32768]), self._ecu_version)
+        cs_str = "✓ checksum OK" if cs_ok else "⚠ checksum INVALID"
 
         name = os.path.basename(filepath) if filepath else "downloaded ROM"
         suffix = "  [.034 unscrambled]" if is_034 else ""
-        self.lbl_file.setText(f"  {name}{suffix}  —  {len(data):,} bytes")
-        self.lbl_file.setStyleSheet("color: #2dff6e; font-size: 11px;")
+        self.lbl_file.setText(
+            f"  {name}{suffix}  —  {self._ecu_version}  —  {cs_str}"
+        )
+        self.lbl_file.setStyleSheet(
+            "color: #2dff6e; font-size: 11px;" if cs_ok
+            else "color: #ff6e2d; font-size: 11px;"
+        )
         self.lbl_dirty.setText("")
         self.btn_save.setEnabled(True)
         self.btn_saveas.setEnabled(True)
 
     def get_data(self) -> bytes:
-        """Get current ROM bytes with map edits applied.
+        """Get current ROM bytes with map edits applied and checksum corrected.
 
-        Fuel map cells hold display values (signed + 128 formula).
-        Convert back to native ROM bytes before writing to romdata.
+        Fuel map cells hold display values (version-specific formula).
+        Converts back to native ROM bytes and fixes checksum before returning.
         """
+        is_266b = getattr(self, '_ecu_version', '266D') == '266B'
+
         for r in range(ROWS):
             for c in range(COLS):
                 fi = self.fuel_table.item(r, c)
                 ti = self.timing_table.item(r, c)
                 if fi:
                     try:
-                        # Fuel: display value → native signed+128 byte
-                        display_val = float(fi.text())
-                        native = display_to_raw(display_val)
+                        if is_266b:
+                            from ecu_profiles import lambda_to_raw
+                            native = lambda_to_raw(float(fi.text()))
+                        else:
+                            native = display_to_raw(float(fi.text()))
                         self._romdata[FUEL_MAP_ADDR + r * COLS + c] = native
                     except (ValueError, TypeError):
                         pass
                 if ti:
                     try:
-                        # Timing: unsigned degrees BTDC, no conversion needed
                         self._romdata[TIMING_MAP_ADDR + r * COLS + c] = int(float(ti.text()))
                     except (ValueError, TypeError):
                         pass
+
+        # Fix checksum over the native 32KB region
+        version = getattr(self, '_ecu_version', '266D')
+        fixed = apply_checksum(self._romdata[:32768], version)
+        self._romdata[:32768] = fixed
+        # Mirror: .bin files served to Teensy are 32KB only; 65536-byte ROM mirrors lower half
+        if len(self._romdata) == 65536:
+            self._romdata[32768:] = fixed
+
         return bytes(self._romdata)
 
     def _open_file(self):

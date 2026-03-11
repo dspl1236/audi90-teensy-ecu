@@ -80,16 +80,45 @@ STOCK MAP DISPLAY RANGES (verified against decoded 034_-_893906266D_Stock.034)
   RPM axis:  600 800 1000 1250 1500 1750 2000 2250 2500 2750 3000 3500 4000 5000 6000 6300
   Load axis: 12.6 18.8 23.5 28.2 32.9 38.8 44.7 50.6 56.9 63.1 69.4 75.7 82.0 88.2 94.5 100.0
 
-CONFIRMED MAP ADDRESSES — 266B (8 maps):
-=========================================
-    0x0000  Fueling Map             16x16 = 256 bytes
-    0x0100  Timing Map              16x16 = 256 bytes
-    0x0200  RPM / Load axes         16 bytes each
-    0x0600  CL Load Limit axis      16 bytes
-    0x0700  CL Disable RPM / Inj Scaler  1 byte each
-    0x0E00  Decel Cutoff axis       16 bytes
-    0x1000  Timing Map Knock        16x16 = 256 bytes
-    MAF Linearization 64 bytes also at 0x0200 region
+CONFIRMED MAP ADDRESSES — 266B (from Java reflection dump of 7A_Early_Generic_1.06.ecu)
+========================================================================================
+  All addresses are in NATIVE ROM space (after algOne unscramble)
+
+  0x0000  Fueling Map             16x16 = 256 bytes  (twoDInverse=True — display transposes rows/cols)
+  0x0100  Timing Map              16x16 = 256 bytes
+  0x0250  RPM axis                16 bytes  factor=25.0   (SAME address as 266D)
+  0x0260  Load axis               16 bytes  factor=0.3922 (SAME address as 266D)
+  0x02D0  MAF Linearization       64 × 16-bit big-endian values (128 bytes)  — 266B ONLY
+  0x0660  CL Load Limit           16 bytes (1-D)
+  0x0640  CL Load axis RPM        16 bytes
+  0x077E  Injection Scaler        1 byte (scalar) — dataLowStart=1918
+  0x07E1  CL Disable RPM          1 byte (scalar) — SAME address as 266D
+  0x0E30  Decel Cutoff            16 bytes (1-D)
+  0x0E20  Decel Cutoff axis RPM   16 bytes
+  0x1000  Timing Map Knock        16x16 = 256 bytes
+
+DISPLAY FORMULAS — 266B (confirmed from decompiled source)
+===========================================================
+  Primary Fueling  (dataSigned=True, dataFactor=0.007813, dataOffset=1.0, decimalPlaces=3):
+    display = signed(native_byte) * 0.007813 + 1.0   (Lambda target, ~0.625–0.867 stock)
+    1.000 = stoichiometric (14.7:1 AFR),  < 1.0 = rich,  > 1.0 = lean
+    storage: native_byte = round((display - 1.0) / 0.007813)  as signed byte
+
+  Primary Timing, Knock Timing: same as 266D (unsigned, degrees BTDC)
+  twoDInverse=True for all 266B 16x16 maps — the 034 app displays them transposed.
+  In raw ROM the layout is identical (row-major RPM×Load); twoDInverse is a display-only flag.
+
+CHECKSUM (from decompiled Checksum.applyOldStyle) — BOTH ECUs
+==============================================================
+  Algorithm: sum all bytes of the native 32KB ROM, adjust correction region to hit target.
+
+  266D:  target = 3384576 (0x33A500)  correction region: 0x1600–0x17FF  (512 bytes)
+  266B:  target = 3894528 (0x3B6D00)  correction region: 0x1400–0x1FFF  (3072 bytes)
+
+  Both stock ROMs verify with sum == target (confirmed).
+  Whenever a map is edited, the correction region bytes must be redistributed
+  so the total 32KB byte sum returns to the target value.
+  The Teensy emulator serves native ROM bytes directly to the ECU — checksum MUST be valid.
 
 KNOWN ROM CRC32 FINGERPRINTS (first 32KB)
 =========================================
@@ -195,6 +224,89 @@ def display_to_raw(display: float) -> int:
 
 
 # ---------------------------------------------------------------------------
+# 266B Primary Fueling display formula
+#   dataFactor=0.007813, dataOffset=1.0, dataSigned=true, decimalPlaces=3
+#   display = signed(native_byte) * 0.007813 + 1.0   (Lambda target)
+#   1.000 = stoich, 0.868 ≈ rich WOT (~12.75 AFR), stock range: 0.625–0.867
+# ---------------------------------------------------------------------------
+
+FUEL_LAMBDA_FACTOR = 0.007813
+FUEL_LAMBDA_OFFSET = 1.0
+
+
+def raw_to_lambda(raw: int) -> float:
+    """Convert native 266B ECU byte to Lambda display value."""
+    signed = raw if raw < 128 else raw - 256
+    return round(signed * FUEL_LAMBDA_FACTOR + FUEL_LAMBDA_OFFSET, 3)
+
+
+def lambda_to_raw(lam: float) -> int:
+    """Convert Lambda display value back to native 266B ROM byte."""
+    native_signed = round((lam - FUEL_LAMBDA_OFFSET) / FUEL_LAMBDA_FACTOR)
+    native_signed = max(-128, min(127, native_signed))
+    return native_signed & 0xFF
+
+
+# ---------------------------------------------------------------------------
+# Checksum  (from decompiled Checksum.applyOldStyle)
+#
+# Both ECUs use a simple byte-sum checksum over the full 32KB native ROM.
+# After any map edit, bytes in the correction region are redistributed
+# to bring the total sum back to the target value.
+#
+# The 034 app spreads the delta evenly across the correction region.
+# We replicate that: subtract floor(delta/n) from each byte, put the remainder
+# in the last byte, then clamp all bytes to 0-255.
+# ---------------------------------------------------------------------------
+
+CHECKSUM_266D = {
+    "target":     3384576,   # csFullByteValue
+    "cs_from":    0x1600,    # csCorrectionFrom  (512-byte region)
+    "cs_to":      0x17FF,    # csCorrectionTo
+}
+CHECKSUM_266B = {
+    "target":     3894528,
+    "cs_from":    0x1400,    # 3072-byte region
+    "cs_to":      0x1FFF,
+}
+
+
+def verify_checksum(native_rom32k: bytes, version: str) -> bool:
+    """Return True if the native 32KB ROM has a valid checksum."""
+    cs = CHECKSUM_266D if version == "266D" else CHECKSUM_266B
+    return sum(native_rom32k[:32768]) == cs["target"]
+
+
+def apply_checksum(native_rom32k: bytearray, version: str) -> bytearray:
+    """Fix checksum in-place: adjust correction region so byte sum == target.
+
+    Modifies and returns the bytearray.  Input must be exactly 32768 bytes.
+    """
+    cs = CHECKSUM_266D if version == "266D" else CHECKSUM_266B
+    target   = cs["target"]
+    cf       = cs["cs_from"]
+    ct       = cs["cs_to"]
+    n        = ct - cf + 1
+
+    rom = bytearray(native_rom32k[:32768])
+    current  = sum(rom)
+    delta    = current - target
+
+    if delta == 0:
+        return rom
+
+    # Spread delta evenly across correction region
+    each, rem = divmod(abs(delta), n)
+    sign = 1 if delta > 0 else -1
+
+    for i in range(n):
+        adj = each + (1 if i < rem else 0)
+        rom[cf + i] = max(0, min(255, rom[cf + i] - sign * adj))
+
+    return rom
+
+
+# ---------------------------------------------------------------------------
 # Map definitions
 # ---------------------------------------------------------------------------
 
@@ -232,51 +344,53 @@ ECU_MAPS: Dict[str, List[MapDef]] = {
     "266B": [
         MapDef(
             name="Fueling Map",
-            data_addr=0x0000, xaxis_addr=0x0200, yaxis_addr=0x0200,
+            data_addr=0x0000, xaxis_addr=0x0260, yaxis_addr=0x0250,
             cols=16, rows=16,
-            description="Primary fuel map  (Load% x RPM = injector pulse width scalar)"
+            description="Primary fuel map (RPM × Load). "
+                        "display = signed(byte)*0.007813 + 1.0  (Lambda target, stock: 0.625–0.867). "
+                        "twoDInverse=True: 034 app transposes display, raw ROM layout is unchanged."
         ),
         MapDef(
             name="Timing Map",
-            data_addr=0x0100, xaxis_addr=0x0200, yaxis_addr=0x0200,
+            data_addr=0x0100, xaxis_addr=0x0280, yaxis_addr=0x0270,
             cols=16, rows=16,
-            description="Primary ignition advance map  (degrees BTDC)"
+            description="Primary ignition advance map (degrees BTDC, stock: 2–38°)"
         ),
         MapDef(
             name="Timing Map Knock",
-            data_addr=0x1000, xaxis_addr=0x0200, yaxis_addr=0x0200,
+            data_addr=0x1000, xaxis_addr=0x0280, yaxis_addr=0x0270,
             cols=16, rows=16,
-            description="Knock safety timing map -- ECU falls back here on knock detection"
+            description="Knock safety timing map"
         ),
         MapDef(
             name="MAF Linearization",
-            data_addr=0x0200, xaxis_addr=0x0000, yaxis_addr=0x0000,
+            data_addr=0x02D0, xaxis_addr=0x0000, yaxis_addr=0x0000,
             cols=64, rows=1,
-            description="MAF sensor linearization table -- maps raw frequency to load signal"
-        ),
-        MapDef(
-            name="CL Load Limit",
-            data_addr=0x0600, xaxis_addr=0x0600, yaxis_addr=0x0000,
-            cols=16, rows=1,
-            description="Closed-loop O2 feedback: disable above this load threshold (per RPM point)"
+            description="MAF sensor linearization — 64×16-bit big-endian values mapping freq→load signal"
         ),
         MapDef(
             name="Injection Scaler",
-            data_addr=0x0700, xaxis_addr=0x0000, yaxis_addr=0x0000,
+            data_addr=0x077E, xaxis_addr=0x0000, yaxis_addr=0x0000,
             cols=1, rows=1,
-            description="Global injector scaling constant. Larger injector = smaller value. Larger MAF = larger value."
+            description="Global injector scaler (larger injector = smaller value). factor=0.3922"
         ),
         MapDef(
             name="CL Disable RPM",
-            data_addr=0x0700, xaxis_addr=0x0000, yaxis_addr=0x0000,
+            data_addr=0x07E1, xaxis_addr=0x0000, yaxis_addr=0x0000,
             cols=1, rows=1,
-            description="Disable all O2 closed-loop feedback above this RPM"
+            description="Disable all O2 closed-loop feedback above this RPM. factor=25"
         ),
         MapDef(
             name="Decel Cutoff",
-            data_addr=0x0E00, xaxis_addr=0x0E00, yaxis_addr=0x0000,
+            data_addr=0x0E30, xaxis_addr=0x0E20, yaxis_addr=0x0000,
             cols=16, rows=1,
-            description="Injector decel cutoff -- disable injectors below this load threshold per RPM"
+            description="Injector decel cutoff — disable injectors below this load per RPM. factor=0.3922"
+        ),
+        MapDef(
+            name="CL Load Limit",
+            data_addr=0x0660, xaxis_addr=0x0640, yaxis_addr=0x0000,
+            cols=16, rows=1,
+            description="Disable O2 closed-loop above this load threshold per RPM"
         ),
     ],
 
