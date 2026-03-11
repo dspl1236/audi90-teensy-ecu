@@ -486,13 +486,14 @@ def get_timing_map_def(version: str) -> MapDef:
 # ---------------------------------------------------------------------------
 
 RESET_VECTORS = {
-    (0xBE, 0xC7): "266B",
-    (0x4D, 0x27): "266D",
+    (0xE8, 0xB1): "266D",   # 893906266D  (7A Late, 4-plug)
+    (0xD7, 0xBC): "266B",   # 893906266B  (7A Early, 2-plug)
 }
 
 KNOWN_ROMS = {
-    0x35f85c9b: ("266D", "Stock", "893906266D"),
-    0x7f722a3c: ("266B", "Stock", "893906266B"),
+    # CRC32 of the native (unscrambled) 32KB ROM, lower half of .034 / raw .bin
+    0x609f1f40: ("266D", "Stock", "893906266D"),
+    0x7739bde5: ("266B", "Stock", "893906266B"),
 }
 
 BLANK_REGION_START = 0x7E00   # 266B has 0xFF here; 266D has code
