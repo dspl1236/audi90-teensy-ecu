@@ -369,15 +369,52 @@ class OfflineRomEditor(QWidget):
 
     def _open_file(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Open ROM .bin", "", "Binary Files (*.bin);;All Files (*)"
+            self, "Open ROM", "",
+            "ROM Files (*.bin *.034);;Binary Files (*.bin);;034 Files (*.034);;All Files (*)"
         )
-        if path:
-            try:
-                with open(path, "rb") as f:
-                    data = f.read()
-                self.load_data(data, path)
-            except Exception as e:
-                QMessageBox.critical(self, "Open Error", str(e))
+        if not path:
+            return
+        try:
+            with open(path, "rb") as f:
+                data = f.read()
+            self.load_data(data, path)
+
+            # Warn if the file-as-loaded had a bad checksum — important for the
+            # EPROM-burn use case where the user may not save before burning.
+            version = getattr(self, '_ecu_version', '266D')
+            is_034  = path.lower().endswith('.034')
+            native  = unscramble_rom(data) if is_034 else data
+            if not verify_checksum(native[:32768], version):
+                from ecu_profiles import CHECKSUM_266D, CHECKSUM_266B
+                cs_info = CHECKSUM_266B if version == "266B" else CHECKSUM_266D
+                actual  = sum(native[:32768])
+                delta   = actual - cs_info["target"]
+                reply   = QMessageBox.warning(
+                    self, "Invalid Checksum on Disk",
+                    f"The file  '{os.path.basename(path)}'  has an invalid checksum.\n\n"
+                    f"  ECU version : {version}\n"
+                    f"  Byte sum    : {actual:,}  (expected {cs_info['target']:,})\n"
+                    f"  Delta       : {delta:+,}\n\n"
+                    "The checksum will be corrected automatically when you Save.\n\n"
+                    "If you plan to burn this file to EPROM without saving first,\n"
+                    "click  'Correct Now'  to fix it in memory immediately.",
+                    buttons=QMessageBox.Ok | QMessageBox.Reset,
+                    defaultButton=QMessageBox.Ok,
+                )
+                if reply == QMessageBox.Reset:   # "Correct Now"
+                    fixed = apply_checksum(bytearray(self._romdata[:32768]), version)
+                    self._romdata[:32768] = fixed
+                    if len(self._romdata) == 65536:
+                        self._romdata[32768:] = fixed
+                    self.lbl_file.setText(
+                        self.lbl_file.text().replace("⚠ checksum INVALID", "✓ checksum corrected")
+                    )
+                    self.lbl_file.setStyleSheet("color: #2dff6e; font-size: 11px;")
+                    self.lbl_dirty.setText("● Unsaved changes")
+                    self._dirty = True
+
+        except Exception as e:
+            QMessageBox.critical(self, "Open Error", str(e))
 
     def _save_file(self):
         if not self._filepath:
@@ -386,25 +423,62 @@ class OfflineRomEditor(QWidget):
         self._write_file(self._filepath)
 
     def _save_as_file(self):
+        start_dir = os.path.dirname(self._filepath) if self._filepath else ""
+        suggest   = os.path.join(start_dir, "tune.bin")
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save ROM .bin", "", "Binary Files (*.bin);;All Files (*)"
+            self, "Save ROM .bin", suggest,
+            "Binary ROM Files (*.bin);;All Files (*)"
         )
-        if path:
-            self._filepath = path
-            self._write_file(path)
+        if not path:
+            return
+        # Guard: never save as .034 — that format is bit-scrambled on disk;
+        # saving unscrambled bytes with that extension would corrupt the file.
+        if path.lower().endswith(".034"):
+            QMessageBox.warning(
+                self, "Wrong Extension",
+                "Cannot save as .034 — that format requires bit-scrambling.\n"
+                "Save as .bin for Teensy SD card or EPROM programmer use."
+            )
+            return
+        self._filepath = path
+        self._write_file(path)
 
     def _write_file(self, path: str):
+        """Write ROM to disk, apply checksum, and report the correction in the UI."""
         try:
-            data = self.get_data()
+            # Sample pre-correction sum so we can report the delta to the user
+            pre_sum = sum(self._romdata[:32768])
+            data    = self.get_data()   # applies apply_checksum() internally
+
             with open(path, "wb") as f:
                 f.write(data)
+
+            version = getattr(self, '_ecu_version', '266D')
+            from ecu_profiles import CHECKSUM_266D, CHECKSUM_266B
+            cs_info = CHECKSUM_266B if version == "266B" else CHECKSUM_266D
+            target  = cs_info["target"]
+            delta   = pre_sum - target
+
             self._dirty = False
             self.lbl_dirty.setText("")
             name = os.path.basename(path)
-            self.lbl_file.setText(f"  {name}  —  saved ✓")
+
+            if delta == 0:
+                cs_note = "checksum already valid"
+            else:
+                sign   = "+" if delta > 0 else ""
+                cf, ct = cs_info["cs_from"], cs_info["cs_to"]
+                cs_note = (
+                    f"checksum corrected  "
+                    f"(delta {sign}{delta},  region 0x{cf:04X}–0x{ct:04X})"
+                )
+
+            self.lbl_file.setText(f"  {name}  —  saved ✓   {cs_note}")
             self.lbl_file.setStyleSheet("color: #2dff6e; font-size: 11px;")
+
         except Exception as e:
             QMessageBox.critical(self, "Save Error", str(e))
+
 
     def _on_edit(self):
         if not self._dirty:

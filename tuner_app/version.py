@@ -14,6 +14,6 @@ Examples:
   1.2.3 -> 2.0.0   [manual] first physical ECU test
 """
 
-APP_VERSION  = "1.6.0"
+APP_VERSION  = "1.6.1"
 APP_NAME     = f"Audi90Tuner-v{APP_VERSION}"
 WINDOW_TITLE = f"7A 20v Tuner  v{APP_VERSION}"

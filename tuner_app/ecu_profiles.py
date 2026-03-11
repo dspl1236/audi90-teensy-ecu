@@ -278,30 +278,52 @@ def verify_checksum(native_rom32k: bytes, version: str) -> bool:
 
 
 def apply_checksum(native_rom32k: bytearray, version: str) -> bytearray:
-    """Fix checksum in-place: adjust correction region so byte sum == target.
+    """Fix checksum: adjust correction region bytes so sum(32KB ROM) == target.
 
-    Modifies and returns the bytearray.  Input must be exactly 32768 bytes.
+    Distributes the delta across the correction region one unit at a time,
+    skipping any bytes that are already at their clamping limit.  This is
+    robust even when per_byte == 0 and the residue is large relative to
+    individual byte values.
+
+    Returns a new bytearray of length 32768.
     """
-    cs = CHECKSUM_266D if version == "266D" else CHECKSUM_266B
-    target   = cs["target"]
-    cf       = cs["cs_from"]
-    ct       = cs["cs_to"]
-    n        = ct - cf + 1
+    cs     = CHECKSUM_266D if version == "266D" else CHECKSUM_266B
+    target = cs["target"]
+    cf     = cs["cs_from"]
+    ct     = cs["cs_to"]
+    n      = ct - cf + 1
 
-    rom = bytearray(native_rom32k[:32768])
-    current  = sum(rom)
-    delta    = current - target
+    rom   = bytearray(native_rom32k[:32768])
+    delta = sum(rom) - target
 
     if delta == 0:
         return rom
 
-    # Spread delta evenly across correction region
-    each, rem = divmod(abs(delta), n)
-    sign = 1 if delta > 0 else -1
+    sign = 1 if delta > 0 else -1   # +1 means we need to decrease bytes
 
-    for i in range(n):
-        adj = each + (1 if i < rem else 0)
-        rom[cf + i] = max(0, min(255, rom[cf + i] - sign * adj))
+    remaining = abs(delta)
+    passes    = 0
+    while remaining > 0:
+        passes += 1
+        if passes > 256:
+            # Pathological: correction region is all 0 or all 255 — shouldn't
+            # happen with real ROMs but guard against infinite loop.
+            break
+        absorbed = 0
+        for i in range(n):
+            if remaining == 0:
+                break
+            b = rom[cf + i]
+            if sign == 1 and b > 0:        # need to subtract, byte can decrease
+                rom[cf + i] -= 1
+                absorbed += 1
+                remaining -= 1
+            elif sign == -1 and b < 255:   # need to add, byte can increase
+                rom[cf + i] += 1
+                absorbed += 1
+                remaining -= 1
+        if absorbed == 0:
+            break  # completely clamped, give up
 
     return rom
 
