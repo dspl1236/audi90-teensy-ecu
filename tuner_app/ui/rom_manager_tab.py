@@ -378,16 +378,14 @@ class OfflineRomEditor(QWidget):
             with open(path, "rb") as f:
                 data = f.read()
             self.load_data(data, path)
-
-            # Warn if the file-as-loaded had a bad checksum — important for the
-            # EPROM-burn use case where the user may not save before burning.
+            # load_data already unscrambles .034 and stores native bytes in self._romdata,
+            # detects ECU version, and updates the status label with checksum result.
+            # All we need to do here is offer the "Correct Now" dialog if checksum is bad.
             version = getattr(self, '_ecu_version', '266D')
-            is_034  = path.lower().endswith('.034')
-            native  = unscramble_rom(data) if is_034 else data
-            if not verify_checksum(native[:32768], version):
+            if not verify_checksum(bytes(self._romdata[:32768]), version):
                 from ecu_profiles import CHECKSUM_266D, CHECKSUM_266B
                 cs_info = CHECKSUM_266B if version == "266B" else CHECKSUM_266D
-                actual  = sum(native[:32768])
+                actual  = sum(self._romdata[:32768])
                 delta   = actual - cs_info["target"]
                 reply   = QMessageBox.warning(
                     self, "Invalid Checksum on Disk",
