@@ -1,5 +1,5 @@
 """
-ecu_profiles.py  —  7A 20v Tuner  v1.2.0
+ecu_profiles.py  —  7A 20v Tuner  v1.3.0
 =========================================
 ECU version detection, complete map address tables, and hardware profiles.
 

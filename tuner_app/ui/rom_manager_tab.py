@@ -2,7 +2,7 @@
 ui/rom_manager_tab.py
 ROM Manager — Download from Teensy SD, Upload to Teensy SD,
 Offline map editing, corrections toggle.
-v1.1.0
+v1.3.0
 """
 
 import os

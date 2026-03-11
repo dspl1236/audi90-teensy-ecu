@@ -52,9 +52,11 @@ void load_rom_from_sd(const char* filename);
 void save_tune_to_sd(const char* filename);
 
 // ── ROM address constants (893906266D confirmed) ──────────────────────────
-#define FUEL_MAP_ADDR    0x0000
-#define TIMING_MAP_ADDR  0x1000
-#define MAP_SIZE         256   // 16×16 = 256 bytes
+#define FUEL_MAP_ADDR    0x0000   // Primary Fueling  — 18×16 = 288 bytes
+#define TIMING_MAP_ADDR  0x0120   // Primary Timing   — 18×16 = 288 bytes (0x0000 + 288)
+#define MAP_ROWS         18       // RPM breakpoints
+#define MAP_COLS         16       // Load (kPa) breakpoints
+#define MAP_SIZE         (MAP_ROWS * MAP_COLS)   // 288 bytes
 
 // ── SD directory listing helper (implement in your sd/file module) ─────────
 // Returns comma-separated list of .bin files on SD root into buf.
@@ -192,9 +194,9 @@ static void _process_command(const char* cmd) {
         char type[8];
         int row, col, val;
         if (sscanf(cmd + 13, "%7[^,],%d,%d,%d", type, &row, &col, &val) == 4) {
-            if (row >= 0 && row < 16 && col >= 0 && col < 16 && val >= 0 && val <= 255) {
+            if (row >= 0 && row < MAP_ROWS && col >= 0 && col < MAP_COLS && val >= 0 && val <= 255) {
                 uint16_t base = (strcmp(type, "timing") == 0) ? TIMING_MAP_ADDR : FUEL_MAP_ADDR;
-                romData[base + row * 16 + col] = (uint8_t)val;
+                romData[base + row * MAP_COLS + col] = (uint8_t)val;
                 Serial.println("ACK:SET_CELL");
                 return;
             }

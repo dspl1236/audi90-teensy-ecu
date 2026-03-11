@@ -2,7 +2,7 @@
 ui/hardware_config_tab.py
 Hardware configuration — ECU version detection, MAF selection,
 injector selection, and fuel map auto-scaling.
-v1.2.0
+v1.3.0
 """
 
 import os

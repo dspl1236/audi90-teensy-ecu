@@ -53,6 +53,9 @@ jobs:
   build-windows:
     runs-on: windows-latest
     needs: build-firmware
+    outputs:
+      exe_name: ${{ steps.ver.outputs.exe }}
+      version:  ${{ steps.ver.outputs.num }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,6 +64,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Read app version
+        id: ver
+        shell: python
+        run: |
+          import re, os
+          txt = open("tuner_app/version.py").read()
+          v = re.search(r'APP_VERSION\s*=\s*"([^"]+)"', txt).group(1)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"num={v}\n")
+              f.write(f"exe=Audi90Tuner-v{v}\n")
 
       - name: Install Python dependencies
         run: |
@@ -92,7 +106,7 @@ jobs:
           pyinstaller `
             --onefile `
             --windowed `
-            --name "Audi90Tuner" `
+            --name "${{ steps.ver.outputs.exe }}" `
             --add-data "ui;ui" `
             --add-data "serial_comm;serial_comm" `
             --add-data "firmware;firmware" `
@@ -106,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Audi90Tuner-Windows
-          path: tuner_app/dist/Audi90Tuner.exe
+          path: tuner_app/dist/${{ steps.ver.outputs.exe }}.exe
           retention-days: 90
 
   create-release:
@@ -139,9 +153,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
-          name: "Audi90 Tuner — Latest Build"
+          name: "Audi90 Tuner v${{ needs.build-windows.outputs.version }} — Latest Build"
           body: |
-            ## 7A 20v Tuner — Auto-built from latest commit
+            ## 7A 20v Tuner v${{ needs.build-windows.outputs.version }} — Auto-built from latest commit
 
             **Commit:** `${{ steps.sha.outputs.short }}` — ${{ github.event.head_commit.message }}
 
@@ -160,7 +174,7 @@ jobs:
             | **Teensy Lite** | SD card map switcher | Map Switcher, ROM Tool, Console |
 
             ### First time with a new Teensy
-            1. Run `Audi90Tuner.exe`
+            1. Run `${{ needs.build-windows.outputs.exe_name }}.exe`
             2. Connect Teensy 4.1 via USB
             3. Click **Connect** — app detects firmware status automatically
             4. If prompted, pick **Full** or **Lite** and click **Flash Now**
@@ -173,7 +187,7 @@ jobs:
 
             ---
             *1990 Audi 90 2.6L Stroker — Teensy 4.1 ECU interface*
-          files: dist/Audi90Tuner.exe
+          files: dist/${{ needs.build-windows.outputs.exe_name }}.exe
           draft: false
           prerelease: false
         env:

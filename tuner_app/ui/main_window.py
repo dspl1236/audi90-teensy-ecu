@@ -17,12 +17,13 @@ from ui.rom_manager_tab  import RomManagerTab
 from ui.datalog_tab      import DatalogTab
 from ui.console_tab          import ConsoleTab
 from ui.hardware_config_tab  import HardwareConfigTab
+from version import WINDOW_TITLE
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("7A 20v Tuner  v1.2.0")
+        self.setWindowTitle(WINDOW_TITLE)
         self.setMinimumSize(1280, 800)
         self.resize(1440, 900)
 
@@ -141,8 +142,8 @@ class MainWindow(QMainWindow):
             "border-top: 1px solid #1a2332; font-size: 11px; }"
         )
 
-        self.lbl_sb_left  = QLabel("7A 20v Tuner  |  Teensy 4.1  |  893906266D")
-        self.lbl_sb_right = QLabel("v1.2.0")
+        self.lbl_sb_left  = QLabel("Audi 90 2.6L Stroker  |  Teensy 4.1  |  893906266D")
+        self.lbl_sb_right = QLabel(f"v{__import__('version').APP_VERSION}")
         self.lbl_sb_left.setStyleSheet("color: #3d5068; padding: 0 8px;")
         self.lbl_sb_right.setStyleSheet("color: #3d5068; padding: 0 8px;")
 
