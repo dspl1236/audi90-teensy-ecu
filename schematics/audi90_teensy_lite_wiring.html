@@ -2,584 +2,599 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Teensy EPROM Emulator — Prototype Wiring</title>
+<title>Teensy EPROM Emulator — Wiring v4</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans+Condensed:wght@400;700;900&display=swap');
-:root{--bg:#03070a;--panel:#070c10;--b1:#0f1c24;--b2:#182838;--txt:#a0b8c8;--dim:#284050;--mid:#486070;--wht:#dceaf6;}
+:root{--bg:#03070a;--panel:#070c10;--b1:#0f1c24;--b2:#182838;--txt:#a0b8c8;--dim:#284050;--wht:#dceaf6;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Condensed',sans-serif;padding:24px 32px;}
-.hdr{margin-bottom:18px;border-bottom:1px solid var(--b2);padding-bottom:14px;}
-.hdr-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#00ccff;letter-spacing:4px;margin-bottom:5px;}
-h1{font-size:23px;font-weight:900;color:var(--wht);letter-spacing:1px;margin-bottom:4px;}
+body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Condensed',sans-serif;padding:22px 28px;}
+.hdr{margin-bottom:16px;border-bottom:1px solid var(--b2);padding-bottom:12px;}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#00ccff;letter-spacing:4px;margin-bottom:4px;}
+h1{font-size:21px;font-weight:900;color:var(--wht);margin-bottom:3px;}
 h1 em{color:#ff9900;font-style:normal;}
-.hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
-.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;padding:9px 13px;background:var(--panel);border:1px solid var(--b1);border-radius:2px;}
-.leg-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;}
-.leg-sw{width:26px;height:4px;border-radius:2px;}
-.diagram-wrap{background:var(--panel);border:1px solid var(--b2);border-radius:2px;padding:12px;margin-bottom:22px;overflow-x:auto;}
-.st{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--mid);margin:20px 0 8px;display:flex;align-items:center;gap:10px;}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:2px;}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px;padding:8px 12px;background:var(--panel);border:1px solid var(--b1);border-radius:2px;}
+.li{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;}
+.ls{width:24px;height:4px;border-radius:2px;}
+.dw{background:var(--panel);border:1px solid var(--b2);border-radius:2px;padding:10px;margin-bottom:20px;overflow-x:auto;}
+.st{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--dim);margin:18px 0 7px;display:flex;align-items:center;gap:9px;}
 .st::after{content:'';flex:1;height:1px;background:var(--b2);}
-.st .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.st .d{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:12px;margin-bottom:4px;}
 thead tr{background:#050910;}
-th{padding:5px 9px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);border-bottom:1px solid var(--b2);font-weight:700;text-align:left;}
-td{padding:5px 9px;border-bottom:1px solid var(--b1);vertical-align:middle;}
+th{padding:5px 8px;font-size:8px;letter-spacing:2px;color:var(--dim);border-bottom:1px solid var(--b2);font-weight:700;text-align:left;text-transform:uppercase;}
+td{padding:4px 8px;border-bottom:1px solid var(--b1);}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#09131a;}
-.wd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle;}
-.wp{color:#ff3333;}.wg{color:#888;}.wdat{color:#ff9900;}.wlo{color:#00ccff;}.whi{color:#33ff99;}.wct{color:#cc44ff;}.wdr{color:#ffee00;}.wnc{color:var(--dim);}
-.note{background:#07100a;border:1px solid #33ff9920;border-left:3px solid #33ff99;border-radius:2px;padding:9px 11px;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:#789080;}
+.wd{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px;vertical-align:middle;}
+.note{background:#07100a;border-left:3px solid #33ff99;border-radius:2px;padding:8px 11px;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:#789080;}
 .note strong{color:#33ff99;}
-.warn{background:#090800;border:1px solid #ffee0020;border-left:3px solid #ffee00;border-radius:2px;padding:9px 11px;margin-top:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:#907e60;}
+.warn{background:#090800;border-left:3px solid #ffee00;border-radius:2px;padding:8px 11px;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:#907e60;}
 .warn strong{color:#ffee00;}
-.checklist{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-top:16px;}
-.cl{background:var(--panel);border:1px solid var(--b1);border-radius:2px;padding:9px;}
-.cl-t{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px;}
-.cl-r{display:flex;align-items:center;gap:6px;padding:3px 0;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--txt);border-bottom:1px solid var(--b1);}
-.cl-r:last-child{border-bottom:none;}
-.cl-b{width:11px;height:11px;border:1px solid var(--b2);border-radius:1px;flex-shrink:0;}
+.cl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;}
+.clb{background:var(--panel);border:1px solid var(--b1);border-radius:2px;padding:8px;}
+.clt{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;}
+.clr{display:flex;align-items:center;gap:5px;padding:2px 0;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--txt);border-bottom:1px solid var(--b1);}
+.clr:last-child{border-bottom:none;}
+.clbox{width:10px;height:10px;border:1px solid var(--b2);border-radius:1px;flex-shrink:0;}
 </style>
 </head>
 <body>
 <div class="hdr">
-  <div class="hdr-tag">// AUDI 90 TEENSY ECU INTERFACE · LITE v1.0 · PROTOTYPE WIRING</div>
-  <h1>EPROM EMULATOR <em>//</em> BREADBOARD WIRING REFERENCE</h1>
-  <div class="hdr-sub">TEENSY 4.1 CENTRE · 74HCT245 ×3 · 27C256 DIP-28 SOCKET · POWER+GND BUS BAR</div>
+  <div class="tag">// AUDI 90 TEENSY ECU · LITE v1.0 · PROTOTYPE WIRING</div>
+  <h1>EPROM EMULATOR <em>//</em> WIRING REFERENCE</h1>
+  <div class="sub">TEENSY 4.1 CENTRE · 74HCT245 ×3 · 27C256 DIP-28 · NET-LABEL SCHEMATIC</div>
 </div>
-<div class="legend">
-  <div class="leg-item"><div class="leg-sw" style="background:#ff3333"></div>RED — 5V power bus</div>
-  <div class="leg-item"><div class="leg-sw" style="background:#555"></div>BLACK — GND bus</div>
-  <div class="leg-item"><div class="leg-sw" style="background:#ff9900"></div>ORANGE — Data D0–D7</div>
-  <div class="leg-item"><div class="leg-sw" style="background:#00ccff"></div>CYAN — Addr low A0–A7</div>
-  <div class="leg-item"><div class="leg-sw" style="background:#33ff99"></div>GREEN — Addr high A8–A14</div>
-  <div class="leg-item"><div class="leg-sw" style="background:#cc44ff"></div>PURPLE — Control /OE /CE</div>
-  <div class="leg-item"><div class="leg-sw" style="background:#ffee00"></div>YELLOW — DIR</div>
+<div class="leg">
+  <div class="li"><div class="ls" style="background:#ff3333"></div>5V power bus</div>
+  <div class="li"><div class="ls" style="background:#555"></div>GND bus</div>
+  <div class="li"><div class="ls" style="background:#ff9900"></div>Data D0–D7</div>
+  <div class="li"><div class="ls" style="background:#00ccff"></div>Addr low A0–A7</div>
+  <div class="li"><div class="ls" style="background:#33ff99"></div>Addr high A8–A14</div>
+  <div class="li"><div class="ls" style="background:#cc44ff"></div>Control /OE /CE</div>
+  <div class="li"><div class="ls" style="background:#ffee00"></div>DIR</div>
+  <div class="li" style="color:#486070">◈ = net label (no wire — matching names connect)</div>
 </div>
-<div class="diagram-wrap">
-<svg width="1100" height="780" viewBox="0 0 1100 780" style="display:block" font-family="'IBM Plex Mono',monospace">
+<div class="dw">
+<svg width="1280" height="820" viewBox="0 0 1280 820" style="display:block" font-family="'IBM Plex Mono',monospace">
 <defs>
 <marker id="mR" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#ff3333"/></marker>
-<marker id="mK" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#555555"/></marker>
+<marker id="mK" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#555"/></marker>
 <marker id="mD" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#ff9900"/></marker>
 <marker id="mL" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#00ccff"/></marker>
 <marker id="mH" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#33ff99"/></marker>
 <marker id="mP" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#cc44ff"/></marker>
 <marker id="mY" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,6 2.5,0 5" fill="#ffee00"/></marker>
 </defs>
-<rect x="0" y="21" width="1100" height="10" rx="3" fill="#1a0000" stroke="#ff3333" stroke-width="1.5"/>
-<rect x="0" y="21" width="1100" height="10" rx="3" fill="url(#pgrd)" fill-opacity="0"/>
-<text x="8" y="30" fill="#ff3333" font-size="8" font-weight="700" letter-spacing="3">5V</text>
-<text x="1060" y="30" fill="#ff3333" font-size="8" font-weight="700" letter-spacing="3">5V</text>
-<rect x="0" y="749" width="1100" height="10" rx="3" fill="#0a0a0a" stroke="#555555" stroke-width="1.5"/>
-<text x="8" y="758" fill="#888" font-size="8" font-weight="700" letter-spacing="3">GND</text>
-<text x="1050" y="758" fill="#888" font-size="8" font-weight="700" letter-spacing="3">GND</text>
-<rect x="20" y="52" width="127" height="650" rx="3" fill="#040c12" stroke="#2a4555" stroke-width="1.5"/>
-<rect x="20" y="52" width="127" height="4" fill="#ff6600"/>
-<path d="M62,56 Q82,48 102,56" fill="none" stroke="#3a5a6a" stroke-width="1"/>
-<text x="82" y="40" fill="#ff6600" font-size="9" text-anchor="middle" letter-spacing="2">DIP-28</text>
-<text x="82" y="50" fill="#2a4555" font-size="7" text-anchor="middle">27C256·5V</text>
-<circle cx="35" cy="84" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="35" y="88" fill="#33ff99" font-size="6" text-anchor="middle">1</text>
-<text x="46" y="88" fill="#33ff99" font-size="7">A14</text>
-<circle cx="35" cy="110" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="35" y="114" fill="#33ff99" font-size="6" text-anchor="middle">2</text>
-<text x="46" y="114" fill="#33ff99" font-size="7">A12</text>
-<circle cx="35" cy="136" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="140" fill="#00ccff" font-size="6" text-anchor="middle">3</text>
-<text x="46" y="140" fill="#00ccff" font-size="7">A7</text>
-<circle cx="35" cy="162" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="166" fill="#00ccff" font-size="6" text-anchor="middle">4</text>
-<text x="46" y="166" fill="#00ccff" font-size="7">A6</text>
-<circle cx="35" cy="188" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="192" fill="#00ccff" font-size="6" text-anchor="middle">5</text>
-<text x="46" y="192" fill="#00ccff" font-size="7">A5</text>
-<circle cx="35" cy="214" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="218" fill="#00ccff" font-size="6" text-anchor="middle">6</text>
-<text x="46" y="218" fill="#00ccff" font-size="7">A4</text>
-<circle cx="35" cy="240" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="244" fill="#00ccff" font-size="6" text-anchor="middle">7</text>
-<text x="46" y="244" fill="#00ccff" font-size="7">A3</text>
-<circle cx="35" cy="266" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="270" fill="#00ccff" font-size="6" text-anchor="middle">8</text>
-<text x="46" y="270" fill="#00ccff" font-size="7">A2</text>
-<circle cx="35" cy="292" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="296" fill="#00ccff" font-size="6" text-anchor="middle">9</text>
-<text x="46" y="296" fill="#00ccff" font-size="7">A1</text>
-<circle cx="35" cy="318" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="35" y="322" fill="#00ccff" font-size="6" text-anchor="middle">10</text>
-<text x="46" y="322" fill="#00ccff" font-size="7">A0</text>
-<circle cx="35" cy="344" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="35" y="348" fill="#ff9900" font-size="6" text-anchor="middle">11</text>
-<text x="46" y="348" fill="#ff9900" font-size="7">D0</text>
-<circle cx="35" cy="370" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="35" y="374" fill="#ff9900" font-size="6" text-anchor="middle">12</text>
-<text x="46" y="374" fill="#ff9900" font-size="7">D1</text>
-<circle cx="35" cy="396" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="35" y="400" fill="#ff9900" font-size="6" text-anchor="middle">13</text>
-<text x="46" y="400" fill="#ff9900" font-size="7">D2</text>
-<circle cx="35" cy="422" r="5" fill="#080808" stroke="#555555" stroke-width="1.5"/>
-<text x="35" y="426" fill="#555555" font-size="6" text-anchor="middle">14</text>
-<text x="46" y="426" fill="#555555" font-size="7">GND</text>
-<circle cx="130" cy="84" r="5" fill="#100000" stroke="#ff3333" stroke-width="1.5"/>
-<text x="130" y="88" fill="#ff3333" font-size="6" text-anchor="middle">28</text>
-<text x="119" y="88" fill="#ff3333" font-size="7" text-anchor="end">Vcc</text>
-<circle cx="130" cy="110" r="5" fill="#060606" stroke="#252525" stroke-width="1.5" stroke-dasharray="2,2"/>
-<text x="130" y="114" fill="#252525" font-size="6" text-anchor="middle">27</text>
-<text x="119" y="114" fill="#252525" font-size="7" text-anchor="end">NC</text>
-<circle cx="130" cy="136" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="130" y="140" fill="#33ff99" font-size="6" text-anchor="middle">26</text>
-<text x="119" y="140" fill="#33ff99" font-size="7" text-anchor="end">A13</text>
-<circle cx="130" cy="162" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="130" y="166" fill="#33ff99" font-size="6" text-anchor="middle">25</text>
-<text x="119" y="166" fill="#33ff99" font-size="7" text-anchor="end">A8</text>
-<circle cx="130" cy="188" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="130" y="192" fill="#33ff99" font-size="6" text-anchor="middle">24</text>
-<text x="119" y="192" fill="#33ff99" font-size="7" text-anchor="end">A9</text>
-<circle cx="130" cy="214" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="130" y="218" fill="#33ff99" font-size="6" text-anchor="middle">23</text>
-<text x="119" y="218" fill="#33ff99" font-size="7" text-anchor="end">A11</text>
-<circle cx="130" cy="240" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
-<text x="130" y="244" fill="#cc44ff" font-size="6" text-anchor="middle">22</text>
-<text x="119" y="244" fill="#cc44ff" font-size="7" text-anchor="end">/OE</text>
-<circle cx="130" cy="266" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="130" y="270" fill="#33ff99" font-size="6" text-anchor="middle">21</text>
-<text x="119" y="270" fill="#33ff99" font-size="7" text-anchor="end">A10</text>
-<circle cx="130" cy="292" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
-<text x="130" y="296" fill="#cc44ff" font-size="6" text-anchor="middle">20</text>
-<text x="119" y="296" fill="#cc44ff" font-size="7" text-anchor="end">/CE</text>
-<circle cx="130" cy="318" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="130" y="322" fill="#ff9900" font-size="6" text-anchor="middle">19</text>
-<text x="119" y="322" fill="#ff9900" font-size="7" text-anchor="end">D7</text>
-<circle cx="130" cy="344" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="130" y="348" fill="#ff9900" font-size="6" text-anchor="middle">18</text>
-<text x="119" y="348" fill="#ff9900" font-size="7" text-anchor="end">D6</text>
-<circle cx="130" cy="370" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="130" y="374" fill="#ff9900" font-size="6" text-anchor="middle">17</text>
-<text x="119" y="374" fill="#ff9900" font-size="7" text-anchor="end">D5</text>
-<circle cx="130" cy="396" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="130" y="400" fill="#ff9900" font-size="6" text-anchor="middle">16</text>
-<text x="119" y="400" fill="#ff9900" font-size="7" text-anchor="end">D4</text>
-<circle cx="130" cy="422" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="130" y="426" fill="#ff9900" font-size="6" text-anchor="middle">15</text>
-<text x="119" y="426" fill="#ff9900" font-size="7" text-anchor="end">D3</text>
-<line x1="130" y1="31" x2="130" y2="84" stroke="#ff333360" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="130" cy="31" r="3" fill="#ff3333"/>
-<line x1="35" y1="749" x2="35" y2="422" stroke="#55555560" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="35" cy="749" r="3" fill="#555555"/>
-<rect x="200" y="62" width="160" height="260" rx="2" fill="#0a0400" stroke="#ff9900" stroke-width="1.5"/>
-<rect x="200" y="62" width="160" height="3" rx="1" fill="#ff9900"/>
-<text x="280" y="78" fill="#ff9900" font-size="9" text-anchor="middle" font-weight="700" letter-spacing="1">U2  74HCT245</text>
-<text x="280" y="89" fill="#ff990066" font-size="7" text-anchor="middle">DATA  D0–D7</text>
-<text x="280" y="99" fill="#ff990044" font-size="7" text-anchor="middle">DIR=T29  /OE=GND</text>
-<text x="205" y="114" fill="#ff9900" font-size="7">A1=D0</text>
-<text x="355" y="114" fill="#ff9900" font-size="7" text-anchor="end">B1→T2</text>
-<line x1="200" y1="110" x2="203" y2="110" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="110" x2="357" y2="110" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="140" fill="#ff9900" font-size="7">A2=D1</text>
-<text x="355" y="140" fill="#ff9900" font-size="7" text-anchor="end">B2→T3</text>
-<line x1="200" y1="136" x2="203" y2="136" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="136" x2="357" y2="136" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="166" fill="#ff9900" font-size="7">A3=D2</text>
-<text x="355" y="166" fill="#ff9900" font-size="7" text-anchor="end">B3→T4</text>
-<line x1="200" y1="162" x2="203" y2="162" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="162" x2="357" y2="162" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="192" fill="#ff9900" font-size="7">A4=D3</text>
-<text x="355" y="192" fill="#ff9900" font-size="7" text-anchor="end">B4→T5</text>
-<line x1="200" y1="188" x2="203" y2="188" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="188" x2="357" y2="188" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="218" fill="#ff9900" font-size="7">A5=D4</text>
-<text x="355" y="218" fill="#ff9900" font-size="7" text-anchor="end">B5→T6</text>
-<line x1="200" y1="214" x2="203" y2="214" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="214" x2="357" y2="214" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="244" fill="#ff9900" font-size="7">A6=D5</text>
-<text x="355" y="244" fill="#ff9900" font-size="7" text-anchor="end">B6→T7</text>
-<line x1="200" y1="240" x2="203" y2="240" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="240" x2="357" y2="240" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="270" fill="#ff9900" font-size="7">A7=D6</text>
-<text x="355" y="270" fill="#ff9900" font-size="7" text-anchor="end">B7→T8</text>
-<line x1="200" y1="266" x2="203" y2="266" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="266" x2="357" y2="266" stroke="#ff990044" stroke-width="1"/>
-<text x="205" y="296" fill="#ff9900" font-size="7">A8=D7</text>
-<text x="355" y="296" fill="#ff9900" font-size="7" text-anchor="end">B8→T9</text>
-<line x1="200" y1="292" x2="203" y2="292" stroke="#ff990044" stroke-width="1"/>
-<line x1="360" y1="292" x2="357" y2="292" stroke="#ff990044" stroke-width="1"/>
-<line x1="280" y1="31" x2="280" y2="62" stroke="#ff333360" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="280" cy="31" r="3" fill="#ff3333"/>
-<line x1="280" y1="749" x2="280" y2="322" stroke="#55555560" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="280" cy="749" r="3" fill="#555555"/>
-<rect x="200" y="342" width="160" height="308" rx="2" fill="#020810" stroke="#00ccff" stroke-width="1.5"/>
-<rect x="200" y="342" width="160" height="3" rx="1" fill="#00ccff"/>
-<text x="280" y="358" fill="#00ccff" font-size="9" text-anchor="middle" font-weight="700" letter-spacing="1">U3  74HCT245</text>
-<text x="280" y="369" fill="#00ccff66" font-size="7" text-anchor="middle">ADDR LOW  A0–A7</text>
-<text x="280" y="379" fill="#00ccff44" font-size="7" text-anchor="middle">DIR=Vcc  /OE=GND</text>
-<text x="205" y="394" fill="#00ccff" font-size="7">A1=A0</text>
-<text x="355" y="394" fill="#00ccff" font-size="7" text-anchor="end">B1→T10</text>
-<line x1="200" y1="390" x2="203" y2="390" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="390" x2="357" y2="390" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="422" fill="#00ccff" font-size="7">A2=A1</text>
-<text x="355" y="422" fill="#00ccff" font-size="7" text-anchor="end">B2→T11</text>
-<line x1="200" y1="418" x2="203" y2="418" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="418" x2="357" y2="418" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="450" fill="#00ccff" font-size="7">A3=A2</text>
-<text x="355" y="450" fill="#00ccff" font-size="7" text-anchor="end">B3→T12</text>
-<line x1="200" y1="446" x2="203" y2="446" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="446" x2="357" y2="446" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="478" fill="#00ccff" font-size="7">A4=A3</text>
-<text x="355" y="478" fill="#00ccff" font-size="7" text-anchor="end">B4→T14</text>
-<line x1="200" y1="474" x2="203" y2="474" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="474" x2="357" y2="474" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="506" fill="#00ccff" font-size="7">A5=A4</text>
-<text x="355" y="506" fill="#00ccff" font-size="7" text-anchor="end">B5→T15</text>
-<line x1="200" y1="502" x2="203" y2="502" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="502" x2="357" y2="502" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="534" fill="#00ccff" font-size="7">A6=A5</text>
-<text x="355" y="534" fill="#00ccff" font-size="7" text-anchor="end">B6→T16</text>
-<line x1="200" y1="530" x2="203" y2="530" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="530" x2="357" y2="530" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="562" fill="#00ccff" font-size="7">A7=A6</text>
-<text x="355" y="562" fill="#00ccff" font-size="7" text-anchor="end">B7→T17</text>
-<line x1="200" y1="558" x2="203" y2="558" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="558" x2="357" y2="558" stroke="#00ccff44" stroke-width="1"/>
-<text x="205" y="624" fill="#00ccff" font-size="7">A8=A7</text>
-<text x="355" y="624" fill="#00ccff" font-size="7" text-anchor="end">B8→T36</text>
-<line x1="200" y1="620" x2="203" y2="620" stroke="#00ccff44" stroke-width="1"/>
-<line x1="360" y1="620" x2="357" y2="620" stroke="#00ccff44" stroke-width="1"/>
-<line x1="280" y1="31" x2="280" y2="342" stroke="#ff333360" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="280" cy="31" r="3" fill="#ff3333"/>
-<line x1="280" y1="749" x2="280" y2="650" stroke="#55555560" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="280" cy="749" r="3" fill="#555555"/>
-<rect x="720" y="62" width="160" height="260" rx="2" fill="#030e06" stroke="#33ff99" stroke-width="1.5"/>
-<rect x="720" y="62" width="160" height="3" rx="1" fill="#33ff99"/>
-<text x="800" y="78" fill="#33ff99" font-size="9" text-anchor="middle" font-weight="700" letter-spacing="1">U4  74HCT245</text>
-<text x="800" y="89" fill="#33ff9966" font-size="7" text-anchor="middle">ADDR HIGH  A8–A14+/CE</text>
-<text x="800" y="99" fill="#33ff9944" font-size="7" text-anchor="middle">DIR=Vcc  /OE=GND</text>
-<text x="725" y="114" fill="#33ff99" font-size="7">A1=A8</text>
-<text x="875" y="114" fill="#33ff99" font-size="7" text-anchor="end">B1←T18</text>
-<line x1="720" y1="110" x2="723" y2="110" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="110" x2="877" y2="110" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="140" fill="#33ff99" font-size="7">A2=A9</text>
-<text x="875" y="140" fill="#33ff99" font-size="7" text-anchor="end">B2←T19</text>
-<line x1="720" y1="136" x2="723" y2="136" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="136" x2="877" y2="136" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="166" fill="#33ff99" font-size="7">A3=A10</text>
-<text x="875" y="166" fill="#33ff99" font-size="7" text-anchor="end">B3←T20</text>
-<line x1="720" y1="162" x2="723" y2="162" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="162" x2="877" y2="162" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="192" fill="#33ff99" font-size="7">A4=A11</text>
-<text x="875" y="192" fill="#33ff99" font-size="7" text-anchor="end">B4←T21</text>
-<line x1="720" y1="188" x2="723" y2="188" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="188" x2="877" y2="188" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="218" fill="#33ff99" font-size="7">A5=A12</text>
-<text x="875" y="218" fill="#33ff99" font-size="7" text-anchor="end">B5←T22</text>
-<line x1="720" y1="214" x2="723" y2="214" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="214" x2="877" y2="214" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="244" fill="#33ff99" font-size="7">A6=A13</text>
-<text x="875" y="244" fill="#33ff99" font-size="7" text-anchor="end">B6←T23</text>
-<line x1="720" y1="240" x2="723" y2="240" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="240" x2="877" y2="240" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="270" fill="#33ff99" font-size="7">A7=A14</text>
-<text x="875" y="270" fill="#33ff99" font-size="7" text-anchor="end">B7←T24</text>
-<line x1="720" y1="266" x2="723" y2="266" stroke="#33ff9944" stroke-width="1"/>
-<line x1="880" y1="266" x2="877" y2="266" stroke="#33ff9944" stroke-width="1"/>
-<text x="725" y="296" fill="#cc44ff" font-size="7">A8=/CE</text>
-<text x="875" y="296" fill="#cc44ff" font-size="7" text-anchor="end">B8←T25</text>
-<line x1="720" y1="292" x2="723" y2="292" stroke="#cc44ff44" stroke-width="1"/>
-<line x1="880" y1="292" x2="877" y2="292" stroke="#cc44ff44" stroke-width="1"/>
-<line x1="800" y1="31" x2="800" y2="62" stroke="#ff333360" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="800" cy="31" r="3" fill="#ff3333"/>
-<line x1="800" y1="749" x2="800" y2="322" stroke="#55555560" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="800" cy="749" r="3" fill="#555555"/>
-<rect x="462" y="52" width="198" height="698" rx="3" fill="#020810" stroke="#00e8ff" stroke-width="2"/>
-<rect x="462" y="52" width="198" height="4" rx="2" fill="#00e8ff"/>
-<text x="561" y="70" fill="#00e8ff" font-size="11" text-anchor="middle" letter-spacing="3" font-weight="700">TEENSY 4.1</text>
-<text x="561" y="82" fill="#1a3040" font-size="7" text-anchor="middle">600MHz · NO PINS · DIRECT SOLDER</text>
-<rect x="509" y="728" width="104" height="14" rx="2" fill="#0a1520" stroke="#ffffff18"/>
-<text x="561" y="738" fill="#aaa" font-size="7" text-anchor="middle">USB-C → laptop</text>
-<line x1="601" y1="31" x2="601" y2="52" stroke="#ff333360" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="601" cy="31" r="3" fill="#ff3333"/>
-<line x1="521" y1="749" x2="521" y2="750" stroke="#55555560" stroke-width="1.5" stroke-dasharray="4,3"/>
-<circle cx="521" cy="749" r="3" fill="#555555"/>
-<circle cx="475" cy="110" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="114" fill="#ff9900" font-size="6" text-anchor="middle">2</text>
-<text x="486" y="114" fill="#ff9900" font-size="7">D0</text>
-<circle cx="475" cy="136" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="140" fill="#ff9900" font-size="6" text-anchor="middle">3</text>
-<text x="486" y="140" fill="#ff9900" font-size="7">D1</text>
-<circle cx="475" cy="162" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="166" fill="#ff9900" font-size="6" text-anchor="middle">4</text>
-<text x="486" y="166" fill="#ff9900" font-size="7">D2</text>
-<circle cx="475" cy="188" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="192" fill="#ff9900" font-size="6" text-anchor="middle">5</text>
-<text x="486" y="192" fill="#ff9900" font-size="7">D3</text>
-<circle cx="475" cy="214" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="218" fill="#ff9900" font-size="6" text-anchor="middle">6</text>
-<text x="486" y="218" fill="#ff9900" font-size="7">D4</text>
-<circle cx="475" cy="240" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="244" fill="#ff9900" font-size="6" text-anchor="middle">7</text>
-<text x="486" y="244" fill="#ff9900" font-size="7">D5</text>
-<circle cx="475" cy="266" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="270" fill="#ff9900" font-size="6" text-anchor="middle">8</text>
-<text x="486" y="270" fill="#ff9900" font-size="7">D6</text>
-<circle cx="475" cy="292" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
-<text x="475" y="296" fill="#ff9900" font-size="6" text-anchor="middle">9</text>
-<text x="486" y="296" fill="#ff9900" font-size="7">D7</text>
-<circle cx="475" cy="390" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="394" fill="#00ccff" font-size="6" text-anchor="middle">10</text>
-<text x="486" y="394" fill="#00ccff" font-size="7">A0</text>
-<circle cx="475" cy="418" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="422" fill="#00ccff" font-size="6" text-anchor="middle">11</text>
-<text x="486" y="422" fill="#00ccff" font-size="7">A1</text>
-<circle cx="475" cy="446" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="450" fill="#00ccff" font-size="6" text-anchor="middle">12</text>
-<text x="486" y="450" fill="#00ccff" font-size="7">A2</text>
-<circle cx="475" cy="474" r="5" fill="#060606" stroke="#252525" stroke-width="1.5" stroke-dasharray="2,2"/>
-<text x="475" y="478" fill="#252525" font-size="6" text-anchor="middle">13</text>
-<text x="486" y="478" fill="#252525" font-size="7">LED⚠</text>
-<circle cx="475" cy="502" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="506" fill="#00ccff" font-size="6" text-anchor="middle">14</text>
-<text x="486" y="506" fill="#00ccff" font-size="7">A3</text>
-<circle cx="475" cy="530" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="534" fill="#00ccff" font-size="6" text-anchor="middle">15</text>
-<text x="486" y="534" fill="#00ccff" font-size="7">A4</text>
-<circle cx="475" cy="558" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="562" fill="#00ccff" font-size="6" text-anchor="middle">16</text>
-<text x="486" y="562" fill="#00ccff" font-size="7">A5</text>
-<circle cx="475" cy="586" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="590" fill="#00ccff" font-size="6" text-anchor="middle">17</text>
-<text x="486" y="590" fill="#00ccff" font-size="7">A6</text>
-<circle cx="475" cy="620" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
-<text x="475" y="624" fill="#00ccff" font-size="6" text-anchor="middle">36</text>
-<text x="486" y="624" fill="#00ccff" font-size="7">A7</text>
-<circle cx="475" cy="720" r="6" fill="#080808" stroke="#555555" stroke-width="2"/>
-<text x="475" y="724" fill="#888" font-size="6" text-anchor="middle">GND</text>
-<circle cx="645" cy="110" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="114" fill="#33ff99" font-size="6" text-anchor="middle">18</text>
-<text x="634" y="114" fill="#33ff99" font-size="7" text-anchor="end">A8</text>
-<circle cx="645" cy="136" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="140" fill="#33ff99" font-size="6" text-anchor="middle">19</text>
-<text x="634" y="140" fill="#33ff99" font-size="7" text-anchor="end">A9</text>
-<circle cx="645" cy="162" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="166" fill="#33ff99" font-size="6" text-anchor="middle">20</text>
-<text x="634" y="166" fill="#33ff99" font-size="7" text-anchor="end">A10</text>
-<circle cx="645" cy="188" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="192" fill="#33ff99" font-size="6" text-anchor="middle">21</text>
-<text x="634" y="192" fill="#33ff99" font-size="7" text-anchor="end">A11</text>
-<circle cx="645" cy="214" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="218" fill="#33ff99" font-size="6" text-anchor="middle">22</text>
-<text x="634" y="218" fill="#33ff99" font-size="7" text-anchor="end">A12</text>
-<circle cx="645" cy="240" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="244" fill="#33ff99" font-size="6" text-anchor="middle">23</text>
-<text x="634" y="244" fill="#33ff99" font-size="7" text-anchor="end">A13</text>
-<circle cx="645" cy="266" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
-<text x="645" y="270" fill="#33ff99" font-size="6" text-anchor="middle">24</text>
-<text x="634" y="270" fill="#33ff99" font-size="7" text-anchor="end">A14</text>
-<circle cx="645" cy="292" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
-<text x="645" y="296" fill="#cc44ff" font-size="6" text-anchor="middle">25</text>
-<text x="634" y="296" fill="#cc44ff" font-size="7" text-anchor="end">/CE</text>
-<circle cx="645" cy="370" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
-<text x="645" y="374" fill="#cc44ff" font-size="6" text-anchor="middle">26</text>
-<text x="634" y="374" fill="#cc44ff" font-size="7" text-anchor="end">/OE</text>
-<circle cx="645" cy="460" r="5" fill="#181600" stroke="#ffee00" stroke-width="1.5"/>
-<text x="645" y="464" fill="#ffee00" font-size="6" text-anchor="middle">29</text>
-<text x="634" y="464" fill="#ffee00" font-size="7" text-anchor="end">DIR</text>
-<circle cx="645" cy="680" r="6" fill="#100000" stroke="#ff3333" stroke-width="2"/>
-<text x="645" y="684" fill="#ff3333" font-size="6" text-anchor="middle">VIN</text>
-<text x="634" y="684" fill="#ff3333" font-size="7" text-anchor="end">5V</text>
-<!-- U2 → Teensy data (horizontal) -->
-<line x1="360" y1="110" x2="475" y2="110" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="136" x2="475" y2="136" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="162" x2="475" y2="162" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="188" x2="475" y2="188" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="214" x2="475" y2="214" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="240" x2="475" y2="240" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="266" x2="475" y2="266" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<line x1="360" y1="292" x2="475" y2="292" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<!-- U3 → Teensy addr-low (horizontal) -->
-<line x1="360" y1="390" x2="475" y2="390" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="418" x2="475" y2="418" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="446" x2="475" y2="446" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="474" x2="475" y2="474" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="502" x2="475" y2="502" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="530" x2="475" y2="530" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="558" x2="475" y2="558" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<line x1="360" y1="620" x2="475" y2="620" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<!-- Teensy → U4 addr-high (horizontal) -->
-<line x1="645" y1="110" x2="720" y2="110" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="136" x2="720" y2="136" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="162" x2="720" y2="162" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="188" x2="720" y2="188" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="214" x2="720" y2="214" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="240" x2="720" y2="240" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="266" x2="720" y2="266" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<line x1="645" y1="292" x2="720" y2="292" stroke="#cc44ff" stroke-width="1.5" marker-end="url(#mP)"/>
-<!-- DIP → U2 data (45° fans) -->
-<polyline points="35,344 35,275 200,110" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="35,370 35,301 200,136" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="35,396 35,327 200,162" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="130,422 130,258 200,188" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="130,396 130,284 200,214" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="130,370 130,310 200,240" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="131,344 131,335 200,266" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<polyline points="132,318 174,318 200,292" fill="none" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
-<!-- DIP → U3 addr-low (45° fans) -->
-<polyline points="35,318 128,318 200,390" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="35,292 74,292 200,418" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="35,266 35,281 200,446" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="36,240 36,310 200,474" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="37,214 37,339 200,502" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="38,188 38,368 200,530" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="39,162 39,397 200,558" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<polyline points="40,136 40,460 200,620" fill="none" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
-<!-- DIP → U4 addr-high (bottom routing channel) -->
-<polyline points="35,84 35,772 214,772 720,266" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="35,110 35,781 179,781 720,240" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="130,136 130,790 144,790 720,214" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="130,162 130,799 130,799 720,110" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="130,188 130,808 130,808 720,136" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="130,214 130,817 130,817 720,162" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="130,266 130,826 130,826 720,188" fill="none" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
-<polyline points="130,292 130,835 177,835 720,292" fill="none" stroke="#cc44ff" stroke-width="1.5" marker-end="url(#mP)"/>
-<!-- /OE divider -->
-<line x1="130" y1="240" x2="410" y2="240" stroke="#cc44ff" stroke-width="1.5" stroke-dasharray="5,3"/>
-<rect x="410" y="231" width="26" height="18" rx="2" fill="#06001a" stroke="#cc44ff" stroke-width="1.2"/>
-<text x="423" y="244" fill="#cc44ff" font-size="7" text-anchor="middle">10k</text>
-<line x1="436" y1="240" x2="456" y2="240" stroke="#cc44ff" stroke-width="1.5" stroke-dasharray="5,3"/>
-<circle cx="436" cy="240" r="3" fill="#cc44ff"/>
-<line x1="436" y1="240" x2="436" y2="270" stroke="#cc44ff" stroke-width="1.2"/>
-<rect x="426" y="270" width="20" height="15" rx="2" fill="#06001a" stroke="#cc44ff" stroke-width="1"/>
-<text x="436" y="281" fill="#cc44ff" font-size="7" text-anchor="middle">20k</text>
-<line x1="436" y1="285" x2="436" y2="298" stroke="#cc44ff" stroke-width="1.2"/>
-<line x1="428" y1="298" x2="444" y2="298" stroke="#cc44ff" stroke-width="1.2"/>
-<line x1="430" y1="303" x2="442" y2="303" stroke="#cc44ff" stroke-width="0.8999999999999999"/>
-<line x1="432" y1="308" x2="440" y2="308" stroke="#cc44ff" stroke-width="0.6"/>
-<text x="450" y="303" fill="#555" font-size="7">GND</text>
-<text x="415" y="227" fill="#cc44ff88" font-size="7">÷5V→3.3V→T26</text>
-<polyline points="456,240 456,351 475,370" fill="none" stroke="#cc44ff" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#mP)"/>
-<!-- DIR T29→U2 -->
-<polyline points="645,460 920,460 920,749" fill="none" stroke="#ffee00" stroke-width="1.5" stroke-dasharray="6,3"/>
-<text x="655" y="455" fill="#ffee0088" font-size="7">DIR→U2 pin1</text>
-<polyline points="645,460 675,460 675,762 190,762 190,322" fill="none" stroke="#ffee00" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#mY)"/>
-<text x="417" y="759" fill="#ffee0088" font-size="7">DIR: T29 → U2 pin1  (LOW=Teensy drives data)</text>
+<rect x="0" y="16" width="1280" height="12" rx="3" fill="#180000" stroke="#ff3333" stroke-width="1.5"/>
+<text x="10" y="26" fill="#ff3333" font-size="9" font-weight="700" letter-spacing="3">+5V BUS</text>
+<text x="1200" y="26" fill="#ff3333" font-size="9" font-weight="700">+5V</text>
+<rect x="0" y="789" width="1280" height="12" rx="3" fill="#080808" stroke="#555" stroke-width="1.5"/>
+<text x="10" y="799" fill="#888" font-size="9" font-weight="700" letter-spacing="3">GND BUS</text>
+<text x="1200" y="799" fill="#888" font-size="9" font-weight="700">GND</text>
+<rect x="30" y="46" width="145" height="326" rx="3" fill="#040c12" stroke="#2a5060" stroke-width="1.5"/>
+<rect x="30" y="46" width="145" height="4" rx="1" fill="#ff6600"/>
+<path d="M90,50 Q103,42 116,50" fill="none" stroke="#3a5a6a" stroke-width="1"/>
+<text x="103" y="38" fill="#ff6600" font-size="9" text-anchor="middle" letter-spacing="1">DIP-28 SOCKET</text>
+<text x="103" y="48" fill="#2a5060" font-size="7" text-anchor="middle">27C256 · 5V · ECU</text>
+<line x1="152" y1="28" x2="152" y2="60" stroke="#ff333355" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="152" cy="28" r="3" fill="#ff3333"/>
+<circle cx="152" cy="60" r="3" fill="#ff3333"/>
+<text x="156" y="56" fill="#ff333399" font-size="7">Vcc</text>
+<line x1="52" y1="789" x2="52" y2="346" stroke="#55555555" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="52" cy="789" r="3" fill="#555"/>
+<circle cx="52" cy="346" r="3" fill="#555"/>
+<circle cx="52" cy="60" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="52" y="64" fill="#33ff99" font-size="6" text-anchor="middle">1</text>
+<text x="25" y="64" fill="#33ff99" font-size="8" text-anchor="end">A14</text>
+<polygon points="28,60 32,56 36,60 32,64" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="52" cy="82" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="52" y="86" fill="#33ff99" font-size="6" text-anchor="middle">2</text>
+<text x="25" y="86" fill="#33ff99" font-size="8" text-anchor="end">A12</text>
+<polygon points="28,82 32,78 36,82 32,86" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="52" cy="104" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="108" fill="#00ccff" font-size="6" text-anchor="middle">3</text>
+<text x="25" y="108" fill="#00ccff" font-size="8" text-anchor="end">A7</text>
+<polygon points="28,104 32,100 36,104 32,108" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="126" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="130" fill="#00ccff" font-size="6" text-anchor="middle">4</text>
+<text x="25" y="130" fill="#00ccff" font-size="8" text-anchor="end">A6</text>
+<polygon points="28,126 32,122 36,126 32,130" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="148" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="152" fill="#00ccff" font-size="6" text-anchor="middle">5</text>
+<text x="25" y="152" fill="#00ccff" font-size="8" text-anchor="end">A5</text>
+<polygon points="28,148 32,144 36,148 32,152" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="170" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="174" fill="#00ccff" font-size="6" text-anchor="middle">6</text>
+<text x="25" y="174" fill="#00ccff" font-size="8" text-anchor="end">A4</text>
+<polygon points="28,170 32,166 36,170 32,174" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="192" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="196" fill="#00ccff" font-size="6" text-anchor="middle">7</text>
+<text x="25" y="196" fill="#00ccff" font-size="8" text-anchor="end">A3</text>
+<polygon points="28,192 32,188 36,192 32,196" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="214" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="218" fill="#00ccff" font-size="6" text-anchor="middle">8</text>
+<text x="25" y="218" fill="#00ccff" font-size="8" text-anchor="end">A2</text>
+<polygon points="28,214 32,210 36,214 32,218" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="236" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="240" fill="#00ccff" font-size="6" text-anchor="middle">9</text>
+<text x="25" y="240" fill="#00ccff" font-size="8" text-anchor="end">A1</text>
+<polygon points="28,236 32,232 36,236 32,240" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="258" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="52" y="262" fill="#00ccff" font-size="6" text-anchor="middle">10</text>
+<text x="25" y="262" fill="#00ccff" font-size="8" text-anchor="end">A0</text>
+<polygon points="28,258 32,254 36,258 32,262" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<circle cx="52" cy="280" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="52" y="284" fill="#ff9900" font-size="6" text-anchor="middle">11</text>
+<text x="25" y="284" fill="#ff9900" font-size="8" text-anchor="end">D0</text>
+<polygon points="28,280 32,276 36,280 32,284" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="52" cy="302" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="52" y="306" fill="#ff9900" font-size="6" text-anchor="middle">12</text>
+<text x="25" y="306" fill="#ff9900" font-size="8" text-anchor="end">D1</text>
+<polygon points="28,302 32,298 36,302 32,306" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="52" cy="324" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="52" y="328" fill="#ff9900" font-size="6" text-anchor="middle">13</text>
+<text x="25" y="328" fill="#ff9900" font-size="8" text-anchor="end">D2</text>
+<polygon points="28,324 32,320 36,324 32,328" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="52" cy="346" r="5" fill="#080808" stroke="#555555" stroke-width="2"/>
+<text x="52" y="350" fill="#555555" font-size="6" text-anchor="middle">14</text>
+<circle cx="152" cy="60" r="5" fill="#100000" stroke="#ff3333" stroke-width="1.5"/>
+<text x="152" y="64" fill="#ff3333" font-size="6" text-anchor="middle">28</text>
+<circle cx="152" cy="82" r="5" fill="#060606" stroke="#333" stroke-width="1.5" stroke-dasharray="2,2"/>
+<text x="152" y="86" fill="#333" font-size="6" text-anchor="middle">27</text>
+<circle cx="152" cy="104" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="152" y="108" fill="#33ff99" font-size="6" text-anchor="middle">26</text>
+<text x="180" y="108" fill="#33ff99" font-size="8">A13</text>
+<polygon points="177,104 173,100 169,104 173,108" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="152" cy="126" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="152" y="130" fill="#33ff99" font-size="6" text-anchor="middle">25</text>
+<text x="180" y="130" fill="#33ff99" font-size="8">A8</text>
+<polygon points="177,126 173,122 169,126 173,130" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="152" cy="148" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="152" y="152" fill="#33ff99" font-size="6" text-anchor="middle">24</text>
+<text x="180" y="152" fill="#33ff99" font-size="8">A9</text>
+<polygon points="177,148 173,144 169,148 173,152" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="152" cy="170" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="152" y="174" fill="#33ff99" font-size="6" text-anchor="middle">23</text>
+<text x="180" y="174" fill="#33ff99" font-size="8">A11</text>
+<polygon points="177,170 173,166 169,170 173,174" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="152" cy="192" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
+<text x="152" y="196" fill="#cc44ff" font-size="6" text-anchor="middle">22</text>
+<text x="180" y="196" fill="#cc44ff" font-size="8">/OE</text>
+<polygon points="177,192 173,188 169,192 173,196" fill="#cc44ff33" stroke="#cc44ff" stroke-width="0.8"/>
+<circle cx="152" cy="214" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="152" y="218" fill="#33ff99" font-size="6" text-anchor="middle">21</text>
+<text x="180" y="218" fill="#33ff99" font-size="8">A10</text>
+<polygon points="177,214 173,210 169,214 173,218" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<circle cx="152" cy="236" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
+<text x="152" y="240" fill="#cc44ff" font-size="6" text-anchor="middle">20</text>
+<text x="180" y="240" fill="#cc44ff" font-size="8">/CE</text>
+<polygon points="177,236 173,232 169,236 173,240" fill="#cc44ff33" stroke="#cc44ff" stroke-width="0.8"/>
+<circle cx="152" cy="258" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="152" y="262" fill="#ff9900" font-size="6" text-anchor="middle">19</text>
+<text x="180" y="262" fill="#ff9900" font-size="8">D7</text>
+<polygon points="177,258 173,254 169,258 173,262" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="152" cy="280" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="152" y="284" fill="#ff9900" font-size="6" text-anchor="middle">18</text>
+<text x="180" y="284" fill="#ff9900" font-size="8">D6</text>
+<polygon points="177,280 173,276 169,280 173,284" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="152" cy="302" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="152" y="306" fill="#ff9900" font-size="6" text-anchor="middle">17</text>
+<text x="180" y="306" fill="#ff9900" font-size="8">D5</text>
+<polygon points="177,302 173,298 169,302 173,306" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="152" cy="324" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="152" y="328" fill="#ff9900" font-size="6" text-anchor="middle">16</text>
+<text x="180" y="328" fill="#ff9900" font-size="8">D4</text>
+<polygon points="177,324 173,320 169,324 173,328" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<circle cx="152" cy="346" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="152" y="350" fill="#ff9900" font-size="6" text-anchor="middle">15</text>
+<text x="180" y="350" fill="#ff9900" font-size="8">D3</text>
+<polygon points="177,346 173,342 169,346 173,350" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<rect x="318" y="20" width="140" height="212" rx="2" fill="#0a0300" stroke="#ff9900" stroke-width="1.5"/>
+<rect x="318" y="20" width="140" height="3" fill="#ff9900"/>
+<text x="388" y="36" fill="#ff9900" font-size="9" text-anchor="middle" font-weight="700" letter-spacing="1">U2  74HCT245</text>
+<text x="388" y="48" fill="#ff990066" font-size="7" text-anchor="middle">DATA  D0–D7  ·  DIR=T29  /OE=GND</text>
+<line x1="388" y1="28" x2="388" y2="20" stroke="#ff333355" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="388" cy="28" r="3" fill="#ff3333"/>
+<circle cx="388" cy="20" r="3" fill="#ff3333"/>
+<text x="392" y="16" fill="#ff333399" font-size="7">Vcc</text>
+<line x1="388" y1="789" x2="388" y2="232" stroke="#55555555" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="388" cy="789" r="3" fill="#555"/>
+<circle cx="388" cy="232" r="3" fill="#555"/>
+<text x="314" y="64" fill="#ff9900" font-size="7" text-anchor="end">D0</text>
+<polygon points="318,60 314,56 310,60 314,64" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="60" x2="326" y2="60" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="64" fill="#ff990088" font-size="7">A1·B1</text>
+<line x1="450" y1="60" x2="458" y2="60" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="86" fill="#ff9900" font-size="7" text-anchor="end">D1</text>
+<polygon points="318,82 314,78 310,82 314,86" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="82" x2="326" y2="82" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="86" fill="#ff990088" font-size="7">A2·B2</text>
+<line x1="450" y1="82" x2="458" y2="82" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="108" fill="#ff9900" font-size="7" text-anchor="end">D2</text>
+<polygon points="318,104 314,100 310,104 314,108" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="104" x2="326" y2="104" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="108" fill="#ff990088" font-size="7">A3·B3</text>
+<line x1="450" y1="104" x2="458" y2="104" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="130" fill="#ff9900" font-size="7" text-anchor="end">D3</text>
+<polygon points="318,126 314,122 310,126 314,130" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="126" x2="326" y2="126" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="130" fill="#ff990088" font-size="7">A4·B4</text>
+<line x1="450" y1="126" x2="458" y2="126" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="152" fill="#ff9900" font-size="7" text-anchor="end">D4</text>
+<polygon points="318,148 314,144 310,148 314,152" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="148" x2="326" y2="148" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="152" fill="#ff990088" font-size="7">A5·B5</text>
+<line x1="450" y1="148" x2="458" y2="148" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="174" fill="#ff9900" font-size="7" text-anchor="end">D5</text>
+<polygon points="318,170 314,166 310,170 314,174" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="170" x2="326" y2="170" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="174" fill="#ff990088" font-size="7">A6·B6</text>
+<line x1="450" y1="170" x2="458" y2="170" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="196" fill="#ff9900" font-size="7" text-anchor="end">D6</text>
+<polygon points="318,192 314,188 310,192 314,196" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="192" x2="326" y2="192" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="196" fill="#ff990088" font-size="7">A7·B7</text>
+<line x1="450" y1="192" x2="458" y2="192" stroke="#ff990044" stroke-width="1"/>
+<text x="314" y="218" fill="#ff9900" font-size="7" text-anchor="end">D7</text>
+<polygon points="318,214 314,210 310,214 314,218" fill="#ff990033" stroke="#ff9900" stroke-width="0.8"/>
+<line x1="318" y1="214" x2="326" y2="214" stroke="#ff990044" stroke-width="1"/>
+<text x="330" y="218" fill="#ff990088" font-size="7">A8·B8</text>
+<line x1="450" y1="214" x2="458" y2="214" stroke="#ff990044" stroke-width="1"/>
+<rect x="318" y="218" width="140" height="212" rx="2" fill="#020810" stroke="#00ccff" stroke-width="1.5"/>
+<rect x="318" y="218" width="140" height="3" fill="#00ccff"/>
+<text x="388" y="234" fill="#00ccff" font-size="9" text-anchor="middle" font-weight="700" letter-spacing="1">U3  74HCT245</text>
+<text x="388" y="246" fill="#00ccff66" font-size="7" text-anchor="middle">ADDR LOW  A0–A7  ·  DIR=Vcc  /OE=GND</text>
+<line x1="388" y1="28" x2="388" y2="218" stroke="#ff333355" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="388" cy="28" r="3" fill="#ff3333"/>
+<circle cx="388" cy="218" r="3" fill="#ff3333"/>
+<line x1="388" y1="789" x2="388" y2="430" stroke="#55555555" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="388" cy="789" r="3" fill="#555"/>
+<circle cx="388" cy="430" r="3" fill="#555"/>
+<text x="314" y="262" fill="#00ccff" font-size="7" text-anchor="end">A0</text>
+<polygon points="318,258 314,254 310,258 314,262" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="258" x2="326" y2="258" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="262" fill="#00ccff88" font-size="7">A1·B1</text>
+<line x1="450" y1="258" x2="458" y2="258" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="284" fill="#00ccff" font-size="7" text-anchor="end">A1</text>
+<polygon points="318,280 314,276 310,280 314,284" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="280" x2="326" y2="280" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="284" fill="#00ccff88" font-size="7">A2·B2</text>
+<line x1="450" y1="280" x2="458" y2="280" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="306" fill="#00ccff" font-size="7" text-anchor="end">A2</text>
+<polygon points="318,302 314,298 310,302 314,306" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="302" x2="326" y2="302" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="306" fill="#00ccff88" font-size="7">A3·B3</text>
+<line x1="450" y1="302" x2="458" y2="302" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="328" fill="#00ccff" font-size="7" text-anchor="end">A3</text>
+<polygon points="318,324 314,320 310,324 314,328" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="324" x2="326" y2="324" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="328" fill="#00ccff88" font-size="7">A4·B4</text>
+<line x1="450" y1="324" x2="458" y2="324" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="350" fill="#00ccff" font-size="7" text-anchor="end">A4</text>
+<polygon points="318,346 314,342 310,346 314,350" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="346" x2="326" y2="346" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="350" fill="#00ccff88" font-size="7">A5·B5</text>
+<line x1="450" y1="346" x2="458" y2="346" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="372" fill="#00ccff" font-size="7" text-anchor="end">A5</text>
+<polygon points="318,368 314,364 310,368 314,372" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="368" x2="326" y2="368" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="372" fill="#00ccff88" font-size="7">A6·B6</text>
+<line x1="450" y1="368" x2="458" y2="368" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="394" fill="#00ccff" font-size="7" text-anchor="end">A6</text>
+<polygon points="318,390 314,386 310,390 314,394" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="390" x2="326" y2="390" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="394" fill="#00ccff88" font-size="7">A7·B7</text>
+<line x1="450" y1="390" x2="458" y2="390" stroke="#00ccff44" stroke-width="1"/>
+<text x="314" y="416" fill="#00ccff" font-size="7" text-anchor="end">A7</text>
+<polygon points="318,412 314,408 310,412 314,416" fill="#00ccff33" stroke="#00ccff" stroke-width="0.8"/>
+<line x1="318" y1="412" x2="326" y2="412" stroke="#00ccff44" stroke-width="1"/>
+<text x="330" y="416" fill="#00ccff88" font-size="7">A8·B8</text>
+<line x1="450" y1="412" x2="458" y2="412" stroke="#00ccff44" stroke-width="1"/>
+<rect x="558" y="44" width="204" height="750" rx="3" fill="#020810" stroke="#00e8ff" stroke-width="2"/>
+<rect x="558" y="44" width="204" height="4" fill="#00e8ff"/>
+<text x="660" y="63" fill="#00e8ff" font-size="11" text-anchor="middle" letter-spacing="3" font-weight="700">TEENSY 4.1</text>
+<text x="660" y="76" fill="#182838" font-size="7" text-anchor="middle">600MHz · DIRECT SOLDER · NO PINS</text>
+<rect x="610" y="775" width="100" height="13" rx="2" fill="#0a1520" stroke="#ffffff18"/>
+<text x="660" y="785" fill="#aaa" font-size="7" text-anchor="middle">USB-C → laptop</text>
+<line x1="690" y1="28" x2="690" y2="44" stroke="#ff333355" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="690" cy="28" r="3" fill="#ff3333"/>
+<circle cx="690" cy="44" r="3" fill="#ff3333"/>
+<text x="694" y="40" fill="#ff333399" font-size="7">VIN</text>
+<line x1="630" y1="789" x2="630" y2="794" stroke="#55555555" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="630" cy="789" r="3" fill="#555"/>
+<circle cx="630" cy="794" r="3" fill="#555"/>
+<circle cx="572" cy="60" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="64" fill="#ff9900" font-size="6" text-anchor="middle">T2</text>
+<text x="582" y="64" fill="#ff9900" font-size="7">D0</text>
+<circle cx="572" cy="82" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="86" fill="#ff9900" font-size="6" text-anchor="middle">T3</text>
+<text x="582" y="86" fill="#ff9900" font-size="7">D1</text>
+<circle cx="572" cy="104" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="108" fill="#ff9900" font-size="6" text-anchor="middle">T4</text>
+<text x="582" y="108" fill="#ff9900" font-size="7">D2</text>
+<circle cx="572" cy="126" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="130" fill="#ff9900" font-size="6" text-anchor="middle">T5</text>
+<text x="582" y="130" fill="#ff9900" font-size="7">D3</text>
+<circle cx="572" cy="148" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="152" fill="#ff9900" font-size="6" text-anchor="middle">T6</text>
+<text x="582" y="152" fill="#ff9900" font-size="7">D4</text>
+<circle cx="572" cy="170" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="174" fill="#ff9900" font-size="6" text-anchor="middle">T7</text>
+<text x="582" y="174" fill="#ff9900" font-size="7">D5</text>
+<circle cx="572" cy="192" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="196" fill="#ff9900" font-size="6" text-anchor="middle">T8</text>
+<text x="582" y="196" fill="#ff9900" font-size="7">D6</text>
+<circle cx="572" cy="214" r="5" fill="#100600" stroke="#ff9900" stroke-width="1.5"/>
+<text x="572" y="218" fill="#ff9900" font-size="6" text-anchor="middle">T9</text>
+<text x="582" y="218" fill="#ff9900" font-size="7">D7</text>
+<circle cx="572" cy="236" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="240" fill="#00ccff" font-size="6" text-anchor="middle">T10</text>
+<text x="582" y="240" fill="#00ccff" font-size="7">A0</text>
+<circle cx="572" cy="258" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="262" fill="#00ccff" font-size="6" text-anchor="middle">T11</text>
+<text x="582" y="262" fill="#00ccff" font-size="7">A1</text>
+<circle cx="572" cy="280" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="284" fill="#00ccff" font-size="6" text-anchor="middle">T12</text>
+<text x="582" y="284" fill="#00ccff" font-size="7">A2</text>
+<circle cx="572" cy="302" r="5" fill="#050505" stroke="#333" stroke-width="1.5" stroke-dasharray="2,2"/>
+<text x="572" y="306" fill="#333" font-size="6" text-anchor="middle">T13</text>
+<circle cx="572" cy="324" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="328" fill="#00ccff" font-size="6" text-anchor="middle">T14</text>
+<text x="582" y="328" fill="#00ccff" font-size="7">A3</text>
+<circle cx="572" cy="346" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="350" fill="#00ccff" font-size="6" text-anchor="middle">T15</text>
+<text x="582" y="350" fill="#00ccff" font-size="7">A4</text>
+<circle cx="572" cy="368" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="372" fill="#00ccff" font-size="6" text-anchor="middle">T16</text>
+<text x="582" y="372" fill="#00ccff" font-size="7">A5</text>
+<circle cx="572" cy="390" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="394" fill="#00ccff" font-size="6" text-anchor="middle">T17</text>
+<text x="582" y="394" fill="#00ccff" font-size="7">A6</text>
+<circle cx="572" cy="412" r="5" fill="#020c12" stroke="#00ccff" stroke-width="1.5"/>
+<text x="572" y="416" fill="#00ccff" font-size="6" text-anchor="middle">T36</text>
+<text x="582" y="416" fill="#00ccff" font-size="7">A7</text>
+<circle cx="748" cy="60" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="64" fill="#33ff99" font-size="6" text-anchor="middle">T18</text>
+<text x="738" y="64" fill="#33ff99" font-size="7" text-anchor="end">A8</text>
+<circle cx="748" cy="82" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="86" fill="#33ff99" font-size="6" text-anchor="middle">T19</text>
+<text x="738" y="86" fill="#33ff99" font-size="7" text-anchor="end">A9</text>
+<circle cx="748" cy="104" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="108" fill="#33ff99" font-size="6" text-anchor="middle">T20</text>
+<text x="738" y="108" fill="#33ff99" font-size="7" text-anchor="end">A10</text>
+<circle cx="748" cy="126" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="130" fill="#33ff99" font-size="6" text-anchor="middle">T21</text>
+<text x="738" y="130" fill="#33ff99" font-size="7" text-anchor="end">A11</text>
+<circle cx="748" cy="148" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="152" fill="#33ff99" font-size="6" text-anchor="middle">T22</text>
+<text x="738" y="152" fill="#33ff99" font-size="7" text-anchor="end">A12</text>
+<circle cx="748" cy="170" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="174" fill="#33ff99" font-size="6" text-anchor="middle">T23</text>
+<text x="738" y="174" fill="#33ff99" font-size="7" text-anchor="end">A13</text>
+<circle cx="748" cy="192" r="5" fill="#041008" stroke="#33ff99" stroke-width="1.5"/>
+<text x="748" y="196" fill="#33ff99" font-size="6" text-anchor="middle">T24</text>
+<text x="738" y="196" fill="#33ff99" font-size="7" text-anchor="end">A14</text>
+<circle cx="748" cy="214" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
+<text x="748" y="218" fill="#cc44ff" font-size="6" text-anchor="middle">T25</text>
+<text x="738" y="218" fill="#cc44ff" font-size="7" text-anchor="end">/CE</text>
+<circle cx="748" cy="236" r="5" fill="#0c0018" stroke="#cc44ff" stroke-width="1.5"/>
+<text x="748" y="240" fill="#cc44ff" font-size="6" text-anchor="middle">T26</text>
+<text x="738" y="240" fill="#cc44ff" font-size="7" text-anchor="end">/OE</text>
+<circle cx="748" cy="258" r="5" fill="#181600" stroke="#ffee00" stroke-width="1.5"/>
+<text x="748" y="262" fill="#ffee00" font-size="6" text-anchor="middle">T29</text>
+<text x="738" y="262" fill="#ffee00" font-size="7" text-anchor="end">DIR</text>
+<circle cx="748" cy="280" r="6" fill="#100000" stroke="#ff3333" stroke-width="2"/>
+<text x="748" y="284" fill="#ff3333" font-size="6" text-anchor="middle">VIN</text>
+<text x="738" y="284" fill="#ff3333" font-size="7" text-anchor="end">5V</text>
+<line x1="458" y1="60" x2="572" y2="60" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="82" x2="572" y2="82" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="104" x2="572" y2="104" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="126" x2="572" y2="126" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="148" x2="572" y2="148" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="170" x2="572" y2="170" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="192" x2="572" y2="192" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="214" x2="572" y2="214" stroke="#ff9900" stroke-width="1.5" marker-end="url(#mD)"/>
+<line x1="458" y1="258" x2="572" y2="236" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="280" x2="572" y2="258" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="302" x2="572" y2="280" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="324" x2="572" y2="324" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="346" x2="572" y2="346" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="368" x2="572" y2="368" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="390" x2="572" y2="390" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<line x1="458" y1="412" x2="572" y2="412" stroke="#00ccff" stroke-width="1.5" marker-end="url(#mL)"/>
+<rect x="868" y="20" width="140" height="212" rx="2" fill="#020e06" stroke="#33ff99" stroke-width="1.5"/>
+<rect x="868" y="20" width="140" height="3" fill="#33ff99"/>
+<text x="938" y="36" fill="#33ff99" font-size="9" text-anchor="middle" font-weight="700" letter-spacing="1">U4  74HCT245</text>
+<text x="938" y="48" fill="#33ff9966" font-size="7" text-anchor="middle">ADDR HIGH  A8–A14+/CE  ·  DIR=Vcc  /OE=GND</text>
+<line x1="938" y1="28" x2="938" y2="20" stroke="#ff333355" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="938" cy="28" r="3" fill="#ff3333"/>
+<circle cx="938" cy="20" r="3" fill="#ff3333"/>
+<line x1="938" y1="789" x2="938" y2="232" stroke="#55555555" stroke-width="1.5" stroke-dasharray="4,3"/>
+<circle cx="938" cy="789" r="3" fill="#555"/>
+<circle cx="938" cy="232" r="3" fill="#555"/>
+<text x="1012" y="64" fill="#33ff99" font-size="7">A8</text>
+<polygon points="1008,60 1012,56 1016,60 1012,64" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="60" x2="1008" y2="60" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="64" fill="#33ff9988" font-size="7">A1·B1</text>
+<line x1="868" y1="60" x2="876" y2="60" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="86" fill="#33ff99" font-size="7">A9</text>
+<polygon points="1008,82 1012,78 1016,82 1012,86" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="82" x2="1008" y2="82" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="86" fill="#33ff9988" font-size="7">A2·B2</text>
+<line x1="868" y1="82" x2="876" y2="82" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="108" fill="#33ff99" font-size="7">A10</text>
+<polygon points="1008,104 1012,100 1016,104 1012,108" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="104" x2="1008" y2="104" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="108" fill="#33ff9988" font-size="7">A3·B3</text>
+<line x1="868" y1="104" x2="876" y2="104" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="130" fill="#33ff99" font-size="7">A11</text>
+<polygon points="1008,126 1012,122 1016,126 1012,130" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="126" x2="1008" y2="126" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="130" fill="#33ff9988" font-size="7">A4·B4</text>
+<line x1="868" y1="126" x2="876" y2="126" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="152" fill="#33ff99" font-size="7">A12</text>
+<polygon points="1008,148 1012,144 1016,148 1012,152" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="148" x2="1008" y2="148" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="152" fill="#33ff9988" font-size="7">A5·B5</text>
+<line x1="868" y1="148" x2="876" y2="148" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="174" fill="#33ff99" font-size="7">A13</text>
+<polygon points="1008,170 1012,166 1016,170 1012,174" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="170" x2="1008" y2="170" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="174" fill="#33ff9988" font-size="7">A6·B6</text>
+<line x1="868" y1="170" x2="876" y2="170" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="196" fill="#33ff99" font-size="7">A14</text>
+<polygon points="1008,192 1012,188 1016,192 1012,196" fill="#33ff9933" stroke="#33ff99" stroke-width="0.8"/>
+<line x1="1000" y1="192" x2="1008" y2="192" stroke="#33ff9944" stroke-width="1"/>
+<text x="880" y="196" fill="#33ff9988" font-size="7">A7·B7</text>
+<line x1="868" y1="192" x2="876" y2="192" stroke="#33ff9944" stroke-width="1"/>
+<text x="1012" y="218" fill="#cc44ff" font-size="7">/CE</text>
+<polygon points="1008,214 1012,210 1016,214 1012,218" fill="#cc44ff33" stroke="#cc44ff" stroke-width="0.8"/>
+<line x1="1000" y1="214" x2="1008" y2="214" stroke="#cc44ff44" stroke-width="1"/>
+<text x="880" y="218" fill="#cc44ff88" font-size="7">A8·B8</text>
+<line x1="868" y1="214" x2="876" y2="214" stroke="#cc44ff44" stroke-width="1"/>
+<line x1="748" y1="60" x2="868" y2="60" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="82" x2="868" y2="82" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="104" x2="868" y2="104" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="126" x2="868" y2="126" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="148" x2="868" y2="148" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="170" x2="868" y2="170" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="192" x2="868" y2="192" stroke="#33ff99" stroke-width="1.5" marker-end="url(#mH)"/>
+<line x1="748" y1="214" x2="868" y2="214" stroke="#cc44ff" stroke-width="1.5" marker-end="url(#mP)"/>
+<!-- /OE divider circuit -->
+<text x="760" y="240" fill="#cc44ff88" font-size="7">/OE÷(10k+20k)=3.3V</text>
+<line x1="748" y1="236" x2="540" y2="236" stroke="#cc44ff" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#mP)"/>
+<text x="878" y="220" fill="#cc44ff" font-size="7">/OE (from DIP p22)</text>
+<line x1="943" y1="226" x2="943" y2="234" stroke="#cc44ff" stroke-width="1.5"/>
+<rect x="933" y="234" width="22" height="13" rx="2" fill="#06001a" stroke="#cc44ff" stroke-width="1.2"/>
+<text x="944" y="245" fill="#cc44ff" font-size="7" text-anchor="middle">10k</text>
+<line x1="943" y1="247" x2="943" y2="255" stroke="#cc44ff" stroke-width="1.5"/>
+<circle cx="943" cy="255" r="2.5" fill="#cc44ff"/>
+<line x1="943" y1="255" x2="943" y2="263" stroke="#cc44ff" stroke-width="1.5"/>
+<rect x="933" y="263" width="22" height="13" rx="2" fill="#06001a" stroke="#cc44ff" stroke-width="1.2"/>
+<text x="944" y="274" fill="#cc44ff" font-size="7" text-anchor="middle">20k</text>
+<line x1="943" y1="276" x2="943" y2="286" stroke="#cc44ff" stroke-width="1.5"/>
+<line x1="936" y1="286" x2="950" y2="286" stroke="#cc44ff" stroke-width="1.2"/>
+<line x1="938" y1="291" x2="948" y2="291" stroke="#cc44ff" stroke-width="0.8999999999999999"/>
+<line x1="940" y1="296" x2="946" y2="296" stroke="#cc44ff" stroke-width="0.6"/>
+<text x="958" y="294" fill="#555" font-size="7">GND</text>
+<line x1="943" y1="255" x2="878" y2="255" stroke="#cc44ff" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="958" y="252" fill="#cc44ff88" font-size="6">→ T26</text>
+<text x="760" y="262" fill="#ffee0088" font-size="7">DIR → U2 pin1  LOW=Teensy→ECU</text>
 </svg>
 </div>
 
-<div class="st"><div class="dot" style="background:#ff3333"></div>STEP 1 — POWER &amp; GND BUS BARS</div>
-<table><thead><tr><th>Source</th><th>Signal</th><th>Bus bar</th><th>Tapped to</th><th>Wire</th></tr></thead><tbody>
-<tr><td>Socket pin 28</td><td class="wp">5V Vcc</td><td>Red bar top</td><td>Teensy VIN · U2/U3/U4 Vcc (pin 20)</td><td><span class="wd" style="background:#ff3333"></span><span class="wp">RED</span></td></tr>
-<tr><td>Socket pin 14</td><td class="wg">GND</td><td>Black bar bottom</td><td>Teensy GND · U2/U3/U4 GND (pin 10)</td><td><span class="wd" style="background:#444"></span><span class="wg">BLACK</span></td></tr>
-</tbody></table>
-<div class="note"><strong>Bus bars:</strong> Lay a full-length wire across the board first — red at top, black at bottom. Then tap vertical wires down/up to each component Vcc/GND pin. Add 0.1µF ceramic bypass cap between Vcc and GND on each 74HCT245.</div>
+<div class="st"><div class="d" style="background:#aaa"></div>NET LABELS — matching ◈ symbols connect without physical wires</div>
+<div class="note"><strong>How to read this diagram:</strong> Each ◈ diamond symbol with a signal name (e.g. <span style="color:#ff9900">D0</span>, <span style="color:#33ff99">A8</span>) represents a connection. Find the matching name on each component and wire those two pins together. Wires between chips and the Teensy are drawn as lines. DIP-to-chip connections use net labels only — no crossing wires.</div>
 
-<div class="st"><div class="dot" style="background:#ff9900"></div>STEP 2 — DATA BUS D0–D7 (DIP → U2 → Teensy T2–T9)</div>
-<table><thead><tr><th>Socket Pin</th><th>Signal</th><th>U2 A-side</th><th>U2 B-side</th><th>Teensy</th><th>Wire</th></tr></thead><tbody>
-<tr><td>11 (L)</td><td class="wdat">D0</td><td>A1</td><td>B1</td><td class="wdat">2</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>12 (L)</td><td class="wdat">D1</td><td>A2</td><td>B2</td><td class="wdat">3</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>13 (L)</td><td class="wdat">D2</td><td>A3</td><td>B3</td><td class="wdat">4</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>15 (R)</td><td class="wdat">D3</td><td>A4</td><td>B4</td><td class="wdat">5</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>16 (R)</td><td class="wdat">D4</td><td>A5</td><td>B5</td><td class="wdat">6</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>17 (R)</td><td class="wdat">D5</td><td>A6</td><td>B6</td><td class="wdat">7</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>18 (R)</td><td class="wdat">D6</td><td>A7</td><td>B7</td><td class="wdat">8</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-<tr><td>19 (R)</td><td class="wdat">D7</td><td>A8</td><td>B8</td><td class="wdat">9</td><td><span class="wd" style="background:#ff9900"></span><span class="wdat">ORANGE</span></td></tr>
-</tbody></table>
-<div class="note"><strong>U2 B→Teensy:</strong> Perfectly horizontal wires — U2 rows and Teensy data pads are at the same Y. <strong>U2 config:</strong> DIR (pin 1) → T29 · /OE (pin 19) → GND.</div>
-
-<div class="st"><div class="dot" style="background:#00ccff"></div>STEP 3 — ADDR LOW A0–A7 (DIP → U3 → Teensy T10–T17, T36)</div>
-<table><thead><tr><th>Socket Pin</th><th>Signal</th><th>U3 A-side</th><th>U3 B-side</th><th>Teensy</th><th>Wire</th></tr></thead><tbody>
-<tr><td>10 (L)</td><td class="wlo">A0</td><td>A1</td><td>B1</td><td class="wlo">10</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>9 (L)</td><td class="wlo">A1</td><td>A2</td><td>B2</td><td class="wlo">11</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>8 (L)</td><td class="wlo">A2</td><td>A3</td><td>B3</td><td class="wlo">12</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>7 (L)</td><td class="wlo">A3</td><td>A4</td><td>B4</td><td class="wlo">14</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>6 (L)</td><td class="wlo">A4</td><td>A5</td><td>B5</td><td class="wlo">15</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>5 (L)</td><td class="wlo">A5</td><td>A6</td><td>B6</td><td class="wlo">16</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>4 (L)</td><td class="wlo">A6</td><td>A7</td><td>B7</td><td class="wlo">17</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-<tr><td>3 (L)</td><td class="wlo">A7</td><td>A8</td><td>B8</td><td class="wlo">36</td><td><span class="wd" style="background:#00ccff"></span><span class="wlo">CYAN</span></td></tr>
-</tbody></table>
-<div class="note"><strong>U3 config:</strong> DIR (pin 1) → 5V · /OE (pin 19) → GND. <strong>T13 skip:</strong> A3 → T14. A7 → T36 (bottom pad).</div>
-
-<div class="st"><div class="dot" style="background:#33ff99"></div>STEP 4 — ADDR HIGH A8–A14 + /CE (DIP → bottom channel → U4 → Teensy T18–T25)</div>
-<table><thead><tr><th>Socket Pin</th><th>Signal</th><th>U4 A-side</th><th>U4 B-side</th><th>Teensy</th><th>Wire</th></tr></thead><tbody>
-<tr><td>25 (R)</td><td class="whi">A8</td><td>A1</td><td>B1</td><td class="whi">18</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>24 (R)</td><td class="whi">A9</td><td>A2</td><td>B2</td><td class="whi">19</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>21 (R)</td><td class="whi">A10</td><td>A3</td><td>B3</td><td class="whi">20</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>23 (R)</td><td class="whi">A11</td><td>A4</td><td>B4</td><td class="whi">21</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>2 (L)</td><td class="whi">A12</td><td>A5</td><td>B5</td><td class="whi">22</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>26 (R)</td><td class="whi">A13</td><td>A6</td><td>B6</td><td class="whi">23</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>1 (L)</td><td class="whi">A14</td><td>A7</td><td>B7</td><td class="whi">24</td><td><span class="wd" style="background:#33ff99"></span><span class="whi">GREEN</span></td></tr>
-<tr><td>20 (R)</td><td class="wct">/CE</td><td>A8</td><td>B8</td><td class="wct">25</td><td><span class="wd" style="background:#cc44ff"></span><span class="wct">PURPLE</span></td></tr>
-</tbody></table>
-<div class="note"><strong>Routing:</strong> Addr-high wires drop below the GND bus bar, fan across to U4, then rise via 45° into U4 A-side inputs. <strong>U4 config:</strong> DIR (pin 1) → 5V · /OE (pin 19) → GND. <strong>U4 B-side → Teensy:</strong> Horizontal wires at matching Y.</div>
-
-<div class="st"><div class="dot" style="background:#cc44ff"></div>STEP 5 — /OE DIVIDER + DIR</div>
-<table><thead><tr><th>From</th><th>Via</th><th>To</th><th>Wire</th><th>Notes</th></tr></thead><tbody>
-<tr><td>Socket pin 22 (/OE)</td><td>10kΩ series</td><td class="wct">Teensy T26</td><td><span class="wd" style="background:#cc44ff"></span><span class="wct">PURPLE dashed</span></td><td>5V×20k÷30k = 3.33V ✓</td></tr>
-<tr><td>After 10k junction</td><td>20kΩ to GND</td><td>GND bus</td><td><span class="wd" style="background:#cc44ff"></span><span class="wct">PURPLE</span></td><td>Pull-down</td></tr>
-<tr><td>Teensy T29</td><td>direct</td><td>U2 DIR (pin 1)</td><td><span class="wd" style="background:#ffee00"></span><span class="wdr">YELLOW dashed</span></td><td>Firmware LOW = Teensy drives ECU</td></tr>
+<div class="st"><div class="d" style="background:#ff3333"></div>STEP 1 — BUS BARS (do this first)</div>
+<table><thead><tr><th>From</th><th>Bus</th><th>Connect to</th><th>Wire</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Socket pin 28 (Vcc)</td><td>Red 5V bar</td><td>Teensy VIN · U2/U3/U4 pin 20</td><td><span class="wd" style="background:#ff3333"></span>RED</td><td>Daisy-chain. 0.1µF ceramic bypass cap at each chip.</td></tr>
+<tr><td>Socket pin 14 (GND)</td><td>Black GND bar</td><td>Teensy GND · U2/U3/U4 pin 10</td><td><span class="wd" style="background:#444"></span>BLACK</td><td>Daisy-chain.</td></tr>
 </tbody></table>
 
-<div class="st"><div class="dot" style="background:#253040"></div>NOT CONNECTED</div>
-<table><thead><tr><th>Pin</th><th>Signal</th><th>Action</th></tr></thead><tbody>
-<tr><td class="wnc">Socket pin 27</td><td class="wnc">WE</td><td>Leave open — programming only</td></tr>
-<tr><td class="wnc">Teensy pin 13</td><td class="wnc">LED</td><td>Skip — A3 uses pin 14</td></tr>
+<div class="st"><div class="d" style="background:#ff9900"></div>STEP 2 — DATA BUS (DIP → U2 via net labels → Teensy)</div>
+<table><thead><tr><th>DIP pin</th><th>Signal</th><th>U2 A-in</th><th>U2 B-out</th><th>Teensy</th><th>Wire</th></tr></thead><tbody>
+<tr><td>11 (L)</td><td style="color:#ff9900">D0</td><td>A1</td><td>B1</td><td style="color:#ff9900">T2</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>12 (L)</td><td style="color:#ff9900">D1</td><td>A2</td><td>B2</td><td style="color:#ff9900">T3</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>13 (L)</td><td style="color:#ff9900">D2</td><td>A3</td><td>B3</td><td style="color:#ff9900">T4</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>15 (R)</td><td style="color:#ff9900">D3</td><td>A4</td><td>B4</td><td style="color:#ff9900">T5</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>16 (R)</td><td style="color:#ff9900">D4</td><td>A5</td><td>B5</td><td style="color:#ff9900">T6</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>17 (R)</td><td style="color:#ff9900">D5</td><td>A6</td><td>B6</td><td style="color:#ff9900">T7</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>18 (R)</td><td style="color:#ff9900">D6</td><td>A7</td><td>B7</td><td style="color:#ff9900">T8</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+<tr><td>19 (R)</td><td style="color:#ff9900">D7</td><td>A8</td><td>B8</td><td style="color:#ff9900">T9</td><td><span class="wd" style="background:#ff9900"></span>ORANGE</td></tr>
+</tbody></table>
+<div class="note"><strong>U2 config:</strong> DIR (pin 1) → T29 · /OE (pin 19) → GND · Vcc (20) → 5V · GND (10) → GND</div>
+
+<div class="st"><div class="d" style="background:#00ccff"></div>STEP 3 — ADDR LOW (DIP → U3 via net labels → Teensy)</div>
+<table><thead><tr><th>DIP pin</th><th>Signal</th><th>U3 A-in</th><th>U3 B-out</th><th>Teensy</th><th>Wire</th></tr></thead><tbody>
+<tr><td>10 (L)</td><td style="color:#00ccff">A0</td><td>A1</td><td>B1</td><td style="color:#00ccff">T10</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>9 (L)</td><td style="color:#00ccff">A1</td><td>A2</td><td>B2</td><td style="color:#00ccff">T11</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>8 (L)</td><td style="color:#00ccff">A2</td><td>A3</td><td>B3</td><td style="color:#00ccff">T12</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>7 (L)</td><td style="color:#00ccff">A3</td><td>A4</td><td>B4</td><td style="color:#00ccff">T14</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>6 (L)</td><td style="color:#00ccff">A4</td><td>A5</td><td>B5</td><td style="color:#00ccff">T15</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>5 (L)</td><td style="color:#00ccff">A5</td><td>A6</td><td>B6</td><td style="color:#00ccff">T16</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>4 (L)</td><td style="color:#00ccff">A6</td><td>A7</td><td>B7</td><td style="color:#00ccff">T17</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+<tr><td>3 (L)</td><td style="color:#00ccff">A7</td><td>A8</td><td>B8</td><td style="color:#00ccff">T36</td><td><span class="wd" style="background:#00ccff"></span>CYAN</td></tr>
+</tbody></table>
+<div class="note"><strong>U3 config:</strong> DIR (pin 1) → 5V · /OE (pin 19) → GND. <strong>T13 skip:</strong> A3 → T14. A7 → T36.</div>
+
+<div class="st"><div class="d" style="background:#33ff99"></div>STEP 4 — ADDR HIGH (DIP → U4 via net labels ← Teensy)</div>
+<table><thead><tr><th>DIP pin</th><th>Signal</th><th>U4 A-in</th><th>U4 B-out</th><th>Teensy</th><th>Wire</th></tr></thead><tbody>
+<tr><td>25 (R)</td><td style="color:#33ff99">A8</td><td>A1</td><td>B1</td><td style="color:#33ff99">T18</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>24 (R)</td><td style="color:#33ff99">A9</td><td>A2</td><td>B2</td><td style="color:#33ff99">T19</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>21 (R)</td><td style="color:#33ff99">A10</td><td>A3</td><td>B3</td><td style="color:#33ff99">T20</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>23 (R)</td><td style="color:#33ff99">A11</td><td>A4</td><td>B4</td><td style="color:#33ff99">T21</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>2 (L)</td><td style="color:#33ff99">A12</td><td>A5</td><td>B5</td><td style="color:#33ff99">T22</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>26 (R)</td><td style="color:#33ff99">A13</td><td>A6</td><td>B6</td><td style="color:#33ff99">T23</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>1 (L)</td><td style="color:#33ff99">A14</td><td>A7</td><td>B7</td><td style="color:#33ff99">T24</td><td><span class="wd" style="background:#33ff99"></span>GREEN</td></tr>
+<tr><td>20 (R)</td><td style="color:#cc44ff">/CE</td><td>A8</td><td>B8</td><td style="color:#cc44ff">T25</td><td><span class="wd" style="background:#cc44ff"></span>PURPLE</td></tr>
+</tbody></table>
+<div class="note"><strong>U4 config:</strong> DIR (pin 1) → 5V · /OE (pin 19) → GND. <strong>Net labels:</strong> Wire each DIP addr-high pin directly to the matching U4 A-side input. Then U4 B-side outputs wire horizontally to Teensy right pads (drawn on diagram).</div>
+
+<div class="st"><div class="d" style="background:#cc44ff"></div>STEP 5 — /OE DIVIDER + DIR</div>
+<table><thead><tr><th>From</th><th>Via</th><th>To</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Socket pin 22 (/OE)</td><td>10kΩ series → junction → 20kΩ → GND</td><td style="color:#cc44ff">Teensy T26</td><td>Divides 5V → 3.33V at T26. See diagram.</td></tr>
+<tr><td>Teensy T29 (DIR)</td><td>direct wire</td><td>U2 pin 1 (DIR)</td><td>Firmware: LOW = Teensy drives data bus</td></tr>
 </tbody></table>
 
-<div class="st"><div class="dot" style="background:#486070"></div>BUILD CHECKLIST</div>
-<div class="checklist">
-<div class="cl"><div class="cl-t" style="color:#ff3333">Power + Bus Bars</div>
-<div class="cl-r"><div class="cl-b"></div>Lay 5V bus bar (red) across top</div>
-<div class="cl-r"><div class="cl-b"></div>Lay GND bus bar (black) across bottom</div>
-<div class="cl-r"><div class="cl-b"></div>Sk28 → 5V bar · Sk14 → GND bar</div>
-<div class="cl-r"><div class="cl-b"></div>Tap 5V → Teensy VIN</div>
-<div class="cl-r"><div class="cl-b"></div>Tap GND → Teensy GND</div>
-<div class="cl-r"><div class="cl-b"></div>Tap 5V → U2 pin 20 (Vcc)</div>
-<div class="cl-r"><div class="cl-b"></div>Tap 5V → U3 pin 20 (Vcc)</div>
-<div class="cl-r"><div class="cl-b"></div>Tap 5V → U4 pin 20 (Vcc)</div>
-<div class="cl-r"><div class="cl-b"></div>Tap GND → U2 pin 10</div>
-<div class="cl-r"><div class="cl-b"></div>Tap GND → U3 pin 10</div>
-<div class="cl-r"><div class="cl-b"></div>Tap GND → U4 pin 10</div>
-<div class="cl-r"><div class="cl-b"></div>5V → U3 DIR (pin 1)</div>
-<div class="cl-r"><div class="cl-b"></div>5V → U4 DIR (pin 1)</div>
-<div class="cl-r"><div class="cl-b"></div>GND → U2/U3/U4 /OE (pin 19)</div>
-<div class="cl-r"><div class="cl-b"></div>0.1µF bypass cap on each chip</div>
-<div class="cl-r"><div class="cl-b"></div>Verify 3.3V on Teensy 3V3 pad</div>
+<div class="st"><div class="d" style="background:#253040"></div>NOT CONNECTED</div>
+<table><thead><tr><th>Pin</th><th>Reason</th></tr></thead><tbody>
+<tr><td style="color:#486070">Socket pin 27 (WE)</td><td>Leave open — EPROM programming only, not used in emulation</td></tr>
+<tr><td style="color:#486070">Teensy pin 13</td><td>Onboard LED — skip this pin. A3 goes to T14 instead.</td></tr>
+</tbody></table>
+
+<div class="st"><div class="d" style="background:#486070"></div>CHECKLIST</div>
+<div class="cl">
+<div class="clb"><div class="clt" style="color:#ff3333">Power + Bus Bars</div>
+<div class="clr"><div class="clbox"></div>Lay 5V bus bar (red) — full width top</div>
+<div class="clr"><div class="clbox"></div>Lay GND bus bar (black) — full width bottom</div>
+<div class="clr"><div class="clbox"></div>Sk28 → 5V bar · Sk14 → GND bar</div>
+<div class="clr"><div class="clbox"></div>5V bar → Teensy VIN · GND bar → Teensy GND</div>
+<div class="clr"><div class="clbox"></div>5V bar → U2/U3/U4 pin 20 (Vcc)</div>
+<div class="clr"><div class="clbox"></div>GND bar → U2/U3/U4 pin 10</div>
+<div class="clr"><div class="clbox"></div>5V → U3 DIR (pin 1) · 5V → U4 DIR (pin 1)</div>
+<div class="clr"><div class="clbox"></div>GND → U2/U3/U4 /OE (pin 19)</div>
+<div class="clr"><div class="clbox"></div>0.1µF bypass cap at each chip (Vcc–GND)</div>
+<div class="clr"><div class="clbox"></div>Verify 3.3V on Teensy 3V3 pad before wiring signals</div>
 </div>
-<div class="cl"><div class="cl-t" style="color:#ff9900">Data + Addr Low</div>
-<div class="cl-r"><div class="cl-b"></div>Sk11 D0 → U2-A1 → T2</div>
-<div class="cl-r"><div class="cl-b"></div>Sk12 D1 → U2-A2 → T3</div>
-<div class="cl-r"><div class="cl-b"></div>Sk13 D2 → U2-A3 → T4</div>
-<div class="cl-r"><div class="cl-b"></div>Sk15 D3 → U2-A4 → T5</div>
-<div class="cl-r"><div class="cl-b"></div>Sk16 D4 → U2-A5 → T6</div>
-<div class="cl-r"><div class="cl-b"></div>Sk17 D5 → U2-A6 → T7</div>
-<div class="cl-r"><div class="cl-b"></div>Sk18 D6 → U2-A7 → T8</div>
-<div class="cl-r"><div class="cl-b"></div>Sk19 D7 → U2-A8 → T9</div>
-<div class="cl-r"><div class="cl-b"></div>T29 → U2 DIR (pin 1)</div>
-<div class="cl-r"><div class="cl-b"></div>Sk10 A0 → U3-A1 → T10</div>
-<div class="cl-r"><div class="cl-b"></div>Sk9 A1 → U3-A2 → T11</div>
-<div class="cl-r"><div class="cl-b"></div>Sk8 A2 → U3-A3 → T12</div>
-<div class="cl-r"><div class="cl-b"></div>Sk7 A3 → U3-A4 → T14</div>
-<div class="cl-r"><div class="cl-b"></div>Sk6 A4 → U3-A5 → T15</div>
-<div class="cl-r"><div class="cl-b"></div>Sk5 A5 → U3-A6 → T16</div>
-<div class="cl-r"><div class="cl-b"></div>Sk4 A6 → U3-A7 → T17</div>
-<div class="cl-r"><div class="cl-b"></div>Sk3 A7 → U3-A8 → T36</div>
+<div class="clb"><div class="clt" style="color:#ff9900">Data (U2) + Addr Low (U3)</div>
+<div class="clr"><div class="clbox"></div>Sk11 D0 → U2-A1 → T2</div>
+<div class="clr"><div class="clbox"></div>Sk12 D1 → U2-A2 → T3</div>
+<div class="clr"><div class="clbox"></div>Sk13 D2 → U2-A3 → T4</div>
+<div class="clr"><div class="clbox"></div>Sk15 D3 → U2-A4 → T5</div>
+<div class="clr"><div class="clbox"></div>Sk16 D4 → U2-A5 → T6</div>
+<div class="clr"><div class="clbox"></div>Sk17 D5 → U2-A6 → T7</div>
+<div class="clr"><div class="clbox"></div>Sk18 D6 → U2-A7 → T8</div>
+<div class="clr"><div class="clbox"></div>Sk19 D7 → U2-A8 → T9</div>
+<div class="clr"><div class="clbox"></div>T29 → U2 DIR (pin 1)</div>
+<div class="clr"><div class="clbox"></div>Sk10 A0 → U3-A1 → T10</div>
+<div class="clr"><div class="clbox"></div>Sk9 A1 → U3-A2 → T11</div>
+<div class="clr"><div class="clbox"></div>Sk8 A2 → U3-A3 → T12</div>
+<div class="clr"><div class="clbox"></div>Sk7 A3 → U3-A4 → T14</div>
+<div class="clr"><div class="clbox"></div>Sk6 A4 → U3-A5 → T15</div>
+<div class="clr"><div class="clbox"></div>Sk5 A5 → U3-A6 → T16</div>
+<div class="clr"><div class="clbox"></div>Sk4 A6 → U3-A7 → T17</div>
+<div class="clr"><div class="clbox"></div>Sk3 A7 → U3-A8 → T36</div>
 </div>
-<div class="cl"><div class="cl-t" style="color:#33ff99">Addr High + Control</div>
-<div class="cl-r"><div class="cl-b"></div>Sk25 A8 → bottom ch → U4-A1 → T18</div>
-<div class="cl-r"><div class="cl-b"></div>Sk24 A9 → bottom ch → U4-A2 → T19</div>
-<div class="cl-r"><div class="cl-b"></div>Sk21 A10 → bottom ch → U4-A3 → T20</div>
-<div class="cl-r"><div class="cl-b"></div>Sk23 A11 → bottom ch → U4-A4 → T21</div>
-<div class="cl-r"><div class="cl-b"></div>Sk2 A12 → bottom ch → U4-A5 → T22</div>
-<div class="cl-r"><div class="cl-b"></div>Sk26 A13 → bottom ch → U4-A6 → T23</div>
-<div class="cl-r"><div class="cl-b"></div>Sk1 A14 → bottom ch → U4-A7 → T24</div>
-<div class="cl-r"><div class="cl-b"></div>Sk20 /CE → bottom ch → U4-A8 → T25</div>
-<div class="cl-r"><div class="cl-b"></div>Sk22 /OE → 10k → T26 (+ 20k→GND)</div>
-<div class="cl-r"><div class="cl-b"></div>Sk27 WE = NOT CONNECTED</div>
+<div class="clb"><div class="clt" style="color:#33ff99">Addr High (U4) + Control</div>
+<div class="clr"><div class="clbox"></div>Sk25 A8 → U4-A1 · U4-B1 → T18</div>
+<div class="clr"><div class="clbox"></div>Sk24 A9 → U4-A2 · U4-B2 → T19</div>
+<div class="clr"><div class="clbox"></div>Sk21 A10 → U4-A3 · U4-B3 → T20</div>
+<div class="clr"><div class="clbox"></div>Sk23 A11 → U4-A4 · U4-B4 → T21</div>
+<div class="clr"><div class="clbox"></div>Sk2 A12 → U4-A5 · U4-B5 → T22</div>
+<div class="clr"><div class="clbox"></div>Sk26 A13 → U4-A6 · U4-B6 → T23</div>
+<div class="clr"><div class="clbox"></div>Sk1 A14 → U4-A7 · U4-B7 → T24</div>
+<div class="clr"><div class="clbox"></div>Sk20 /CE → U4-A8 · U4-B8 → T25</div>
+<div class="clr"><div class="clbox"></div>Sk22 /OE → 10k → T26 (+ 20k to GND)</div>
+<div class="clr"><div class="clbox"></div>Sk27 WE = NOT CONNECTED</div>
 </div>
 </div>
 
 <div class="warn" style="margin-top:14px">
-<strong>POWER FIRST:</strong> Bus bars before any signal wires. Tap 5V and GND to Teensy, measure 3.3V on Teensy 3V3 pad before proceeding.<br><br>
-<strong>PIN 13 SKIP:</strong> Teensy pin 13 = onboard LED. A3 → pin 14. A7 → pin 36 (bottom of board).<br><br>
-<strong>ADDR HIGH ROUTING:</strong> These wires drop below the GND bus bar into the bottom channel (8 stacked lanes). Each wire has its own lane — use the colour to trace it back to the correct DIP pin.
+<strong>POWER FIRST:</strong> Bus bars before any signals. Measure 3.3V on Teensy 3V3 pad before continuing.<br>
+<strong>PIN 13 SKIP:</strong> Teensy pin 13 = LED. A3 → pin 14. A7 → pin 36 (bottom pad).<br>
+<strong>NET LABELS:</strong> Wires between DIP and chips are shown only in the table — no crossing lines in the diagram. Match signal names (e.g. ◈ D0 on DIP pin 11 connects to ◈ D0 on U2 A1).
 </div>
-
 </body>
 </html>
