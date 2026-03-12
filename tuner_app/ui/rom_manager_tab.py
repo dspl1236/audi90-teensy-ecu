@@ -313,17 +313,28 @@ class OfflineRomEditor(QWidget):
 
         # Toolbar
         toolbar = QHBoxLayout()
-        self.btn_open   = QPushButton("📂  Open .bin")
-        self.btn_saveas = QPushButton("💾  Save As .bin...")
+        self.btn_open     = QPushButton("📂  Open .bin")
+        self.btn_saveas   = QPushButton("💾  Save As .bin...")
+        self.btn_save512  = QPushButton("💾  Save As 27C512 .bin")
+        self.btn_save512.setToolTip(
+            "Save a 64KB file padded for a 27C512 EPROM.\n"
+            "Your 32KB ROM is placed in the UPPER half (0x8000–0xFFFF).\n"
+            "Lower half (0x0000–0x7FFF) is filled with 0xFF (erased).\n\n"
+            "Most EPROM programmers address the 27C512 at its full 64KB range.\n"
+            "Burning this file directly gives you the correct upper-half placement\n"
+            "without needing to remember any offset in your programmer software.")
         self.lbl_file   = QLabel("No file loaded  —  open a .bin or download from Teensy")
         self.lbl_file.setStyleSheet("color: #3d5068; font-size: 11px;")
         self.lbl_dirty  = QLabel("")
         self.lbl_dirty.setStyleSheet("color: #ff9900; font-size: 11px;")
         self.btn_saveas.setEnabled(False)
+        self.btn_save512.setEnabled(False)
         self.btn_open.clicked.connect(self._open_file)
         self.btn_saveas.clicked.connect(self._save_as_file)
+        self.btn_save512.clicked.connect(self._save_as_27c512)
         toolbar.addWidget(self.btn_open)
         toolbar.addWidget(self.btn_saveas)
+        toolbar.addWidget(self.btn_save512)
         toolbar.addSpacing(12)
         toolbar.addWidget(self.lbl_file)
         toolbar.addWidget(self.lbl_dirty)
@@ -673,6 +684,7 @@ class OfflineRomEditor(QWidget):
             "color: #2dff6e; font-size: 11px;" if cs_ok else "color: #ff6e2d; font-size: 11px;")
         self.lbl_dirty.setText("")
         self.btn_saveas.setEnabled(True)
+        self.btn_save512.setEnabled(True)
 
     def get_data(self) -> bytes:
         is_266b = self._ecu_version == "266B"
@@ -825,6 +837,63 @@ class OfflineRomEditor(QWidget):
             if reply != QMessageBox.Yes:
                 return
         self._write_file(path)
+
+    def _save_as_27c512(self):
+        """Save a 64KB image padded for a 27C512 EPROM.
+
+        27C512 = 64KB.  The ECU only reads the upper 32KB (A15=1), so the ROM
+        sits in the upper half of the chip address space (0x8000–0xFFFF).
+        The lower half (0x0000–0x7FFF) must be 0xFF (erased / don't-care).
+
+        This method builds that 64KB image automatically so the user can point
+        their programmer at the file and burn it without setting any offset.
+        """
+        if self._filepath:
+            base  = os.path.splitext(os.path.basename(self._filepath))[0]
+            start = os.path.join(os.path.dirname(self._filepath),
+                                 base + "_27C512.bin")
+        elif self._save_path:
+            base  = os.path.splitext(os.path.basename(self._save_path))[0]
+            base  = base.replace("_27C512", "")
+            start = os.path.join(os.path.dirname(self._save_path),
+                                 base + "_27C512.bin")
+        else:
+            start = "tune_27C512.bin"
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save 27C512 ROM Image", start,
+            "Binary ROM Files (*.bin);;All Files (*)")
+        if not path:
+            return
+
+        try:
+            # get_data() returns checksummed 32KB (or 64KB mirrored)
+            rom32 = self.get_data()[:32768]
+
+            # 64KB image: lower half = 0xFF, upper half = ROM
+            image = bytearray(b'\xff' * 32768) + bytearray(rom32)
+
+            with open(path, "wb") as f:
+                f.write(bytes(image))
+
+            import zlib
+            crc = zlib.crc32(rom32) & 0xFFFFFFFF
+            self.lbl_file.setText(
+                f"  {os.path.basename(path)}  —  27C512 image saved ✓"
+                f"   64KB  |  ROM @ 0x8000–0xFFFF  |  CRC32: {crc:#010x}")
+            self.lbl_file.setStyleSheet("color: #2dff6e; font-size: 11px;")
+
+            QMessageBox.information(
+                self, "27C512 Image Saved",
+                f"Saved:  {os.path.basename(path)}\n\n"
+                f"File size : 65,536 bytes (64KB)\n"
+                f"ROM data  : upper half  0x8000 – 0xFFFF\n"
+                f"Pad bytes : lower half  0x0000 – 0x7FFF  (0xFF)\n"
+                f"CRC32     : {crc:#010x}\n\n"
+                "Burn this file to your 27C512 with no address offset.\n"
+                "Checksum has been corrected automatically.")
+        except Exception as e:
+            QMessageBox.critical(self, "Save Error", str(e))
 
     def _write_file(self, path: str):
         try:
