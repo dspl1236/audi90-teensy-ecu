@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audi 90 Teensy ECU Interface — LITE v1.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=IBM+Plex+Sans+Condensed:wght@300;400;700;900&display=swap');
+
+  :root {
+    --bg:      #05080a;
+    --panel:   #090d10;
+    --border:  #141e26;
+    --border2: #1e2e3a;
+    --acc:     #00e5ff;   /* cyan — main signal */
+    --grn:     #39ff14;   /* green — power / OK */
+    --ylw:     #ffcc00;   /* yellow — warning */
+    --org:     #ff6600;   /* orange — caution note */
+    --red:     #ff2244;   /* red — critical */
+    --dim:     #2a3f50;
+    --mid:     #4a6880;
+    --txt:     #b0c8d8;
+    --white:   #e8f0f8;
+    --lite:    #7ecfff;   /* lite badge colour */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: 'IBM Plex Sans Condensed', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* scanline overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 3px);
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 0;
+    border-bottom: 1px solid var(--border2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hdr-top {
+    background: linear-gradient(90deg, #050e14 0%, #071420 40%, #050e14 100%);
+    padding: 24px 40px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .hdr-accent-line {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--acc) 20%, var(--grn) 60%, transparent 100%);
+    opacity: 0.5;
+  }
+
+  .hdr-mono {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--grn);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  h1 .slash { color: var(--acc); }
+  h1 .lite-word { color: var(--lite); }
+
+  .hdr-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--dim);
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+
+  .hdr-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 1px;
+  }
+
+  .badge-lite {
+    background: #00e5ff14;
+    border: 1px solid #00e5ff44;
+    color: var(--lite);
+  }
+
+  .badge-scope {
+    background: #39ff1414;
+    border: 1px solid #39ff1444;
+    color: var(--grn);
+    font-size: 8px;
+  }
+
+  .hdr-scope {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .scope-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    padding: 3px 8px;
+    border-radius: 1px;
+    letter-spacing: 1px;
+  }
+
+  .scope-in  { background: #39ff1410; border: 1px solid #39ff1433; color: var(--grn); }
+  .scope-out { background: #ff224410; border: 1px solid #ff224433; color: var(--red); }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: #040607;
+    border-bottom: 1px solid var(--border2);
+    padding: 0 40px;
+    gap: 0;
+  }
+
+  .tab {
+    padding: 13px 22px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.12s;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .tab:hover { color: var(--mid); }
+  .tab.active { color: var(--acc); border-bottom-color: var(--acc); }
+
+  /* ── CONTENT ── */
+  .content { display: none; padding: 32px 40px; }
+  .content.active { display: block; }
+
+  /* ── LAYOUT GRIDS ── */
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* ── BLOCKS ── */
+  .blk {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .blk::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+  }
+
+  .c-cyan::before   { background: var(--acc); }
+  .c-green::before  { background: var(--grn); }
+  .c-yellow::before { background: var(--ylw); }
+  .c-orange::before { background: var(--org); }
+  .c-red::before    { background: var(--red); }
+  .c-lite::before   { background: var(--lite); }
+
+  .blk-t {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .c-cyan .blk-t   { color: var(--acc); }
+  .c-green .blk-t  { color: var(--grn); }
+  .c-yellow .blk-t { color: var(--ylw); }
+  .c-orange .blk-t { color: var(--org); }
+  .c-red .blk-t    { color: var(--red); }
+  .c-lite .blk-t   { color: var(--lite); }
+
+  /* ── PIN ROWS ── */
+  .pr {
+    display: flex;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    gap: 8px;
+  }
+  .pr:last-child { border-bottom: none; }
+
+  .pn {
+    background: #0d1620;
+    color: var(--mid);
+    padding: 2px 6px;
+    border-radius: 1px;
+    font-size: 9px;
+    min-width: 40px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .pl { color: var(--txt); flex: 1; font-size: 11px; }
+  .pd { color: var(--dim); font-size: 10px; text-align: right; flex-shrink: 0; }
+
+  .t-cyan   { color: var(--acc)  !important; }
+  .t-green  { color: var(--grn)  !important; }
+  .t-yellow { color: var(--ylw)  !important; }
+  .t-orange { color: var(--org)  !important; }
+  .t-red    { color: var(--red)  !important; }
+  .t-lite   { color: var(--lite) !important; }
+  .t-white  { color: var(--white)!important; }
+
+  /* ── CALLOUT BOXES ── */
+  .note {
+    background: #080c0e;
+    border: 1px solid #ffcc0022;
+    border-left: 3px solid var(--ylw);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #90a8b8;
+  }
+  .note strong { color: var(--ylw); }
+
+  .info {
+    background: #080c0e;
+    border: 1px solid #00e5ff22;
+    border-left: 3px solid var(--acc);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #90a8b8;
+  }
+  .info strong { color: var(--acc); }
+
+  .ok {
+    background: #080c0e;
+    border: 1px solid #39ff1422;
+    border-left: 3px solid var(--grn);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #90a8b8;
+  }
+  .ok strong { color: var(--grn); }
+
+  .crit {
+    background: #0c0508;
+    border: 1px solid #ff224422;
+    border-left: 3px solid var(--red);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #90a8b8;
+  }
+  .crit strong { color: var(--red); }
+
+  /* ── SVG WRAPPER ── */
+  .svg-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    padding: 24px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  svg text { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── STEPS ── */
+  .steps { background: var(--panel); border: 1px solid var(--border2); border-radius: 2px; padding: 20px; }
+  .step { display: flex; gap: 20px; padding: 18px 0; border-bottom: 1px solid var(--border); }
+  .step:last-child { border-bottom: none; }
+  .step-n {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--acc);
+    min-width: 50px;
+    opacity: 0.2;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .step-body h3 { font-size: 13px; font-weight: 700; color: var(--white); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+  .step-body p  { font-size: 13px; color: var(--txt); line-height: 1.75; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--acc); background: #0d1620; padding: 2px 6px; border-radius: 1px; }
+
+  /* ── BOM TABLE ── */
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #040607; }
+  th { text-align: left; padding: 10px 12px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--border2); font-weight: 700; }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 13px; }
+  tr:hover td { background: #0a0f14; }
+
+  .ref  { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--acc); white-space: nowrap; }
+  .pname { color: var(--white); font-weight: 700; font-size: 13px; }
+  .pspec { color: var(--txt); font-size: 12px; margin-top: 2px; }
+  .pnote { color: var(--mid); font-size: 11px; font-style: italic; margin-top: 3px; }
+  .qty   { font-family: 'IBM Plex Mono', monospace; color: var(--org); text-align: center; white-space: nowrap; }
+  .price { font-family: 'IBM Plex Mono', monospace; color: var(--grn); text-align: right; white-space: nowrap; }
+
+  .cat td {
+    background: #040607;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--org);
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 7px 12px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .total td { border-top: 2px solid var(--border2); border-bottom: none; color: var(--white); font-weight: 700; font-size: 14px; padding-top: 14px; }
+
+  a.amz {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #ff990014; border: 1px solid #ff990040;
+    color: #ff9900;
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 2px 8px; border-radius: 1px;
+    text-decoration: none; letter-spacing: 1px; margin-top: 5px;
+    transition: background 0.12s;
+  }
+  a.amz:hover { background: #ff990028; }
+
+  a.direct {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #00e5ff14; border: 1px solid #00e5ff40;
+    color: var(--acc);
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 2px 8px; border-radius: 1px;
+    text-decoration: none; letter-spacing: 1px; margin-top: 5px;
+    transition: background 0.12s;
+  }
+
+  /* ── SECTION DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border2);
+  }
+
+  /* ── POWER PATH DIAGRAM ── */
+  .power-path {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .pp-node {
+    background: #0d1620;
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    padding: 8px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .pp-arrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--dim);
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── FULL / LITE COMPARE ── */
+  .compare-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .compare-lite {
+    border: 1px solid #00e5ff33;
+    background: #050d10;
+    border-radius: 2px;
+    padding: 16px;
+  }
+  .compare-full {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    border-radius: 2px;
+    padding: 16px;
+    opacity: 0.5;
+  }
+
+  .compare-hdr {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .compare-lite .compare-hdr { color: var(--acc); }
+  .compare-full .compare-hdr { color: var(--dim); }
+
+  .feat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .feat-yes { color: var(--grn); font-size: 11px; flex-shrink: 0; }
+  .feat-no  { color: var(--dim); font-size: 11px; flex-shrink: 0; }
+  .feat-txt-in  { color: var(--txt); }
+  .feat-txt-out { color: var(--dim); text-decoration: line-through; text-decoration-color: #2a3f50; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-mono">// TEENSY 4.1 ECU INTERFACE PROJECT · 443 906 022 HITACHI</div>
+      <h1>AUDI 90 <span class="slash">//</span> EPROM EMULATOR <span class="slash">//</span> <span class="lite-word">LITE</span></h1>
+      <div class="hdr-sub">EPROM EMULATION · MAP SWITCHING · LIVE DATA · NO WIDEBAND · NO INJECTOR TRIM · NO CAN</div>
+    </div>
+    <div class="hdr-right">
+      <span class="badge badge-lite">LITE v1.0 — BUILD FIRST</span>
+      <div class="hdr-scope">
+        <span class="scope-tag scope-in">✓ EPROM EMULATE</span>
+        <span class="scope-tag scope-in">✓ MAP SWITCH</span>
+        <span class="scope-tag scope-in">✓ USB LIVE DATA</span>
+        <span class="scope-tag scope-out">✗ WIDEBAND</span>
+        <span class="scope-tag scope-out">✗ INJ TRIM</span>
+        <span class="scope-tag scope-out">✗ CAN BUS</span>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-accent-line"></div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('schematic')">Schematic</div>
+  <div class="tab" onclick="showTab('power')">Power</div>
+  <div class="tab" onclick="showTab('pinout')">Pin Map</div>
+  <div class="tab" onclick="showTab('build')">Build Steps</div>
+  <div class="tab" onclick="showTab('bom')">BOM</div>
+  <div class="tab" onclick="showTab('scope')">Lite vs Full</div>
+</div>
+
+<!-- ════════ SCHEMATIC ════════ -->
+<div id="tab-schematic" class="content active">
+
+  <div class="svg-wrap">
+    <svg width="980" height="400" viewBox="0 0 980 400">
+      <defs>
+        <marker id="ma" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#00e5ff"/></marker>
+        <marker id="mg" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#39ff14"/></marker>
+        <marker id="my" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#ffcc00"/></marker>
+        <marker id="mo" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#ff6600"/></marker>
+      </defs>
+
+      <!-- ── ECU + SOCKET ── -->
+      <rect x="10" y="80" width="148" height="240" rx="2" fill="#090d10" stroke="#1e2e3a"/>
+      <rect x="10" y="80" width="148" height="3" fill="#ff6600"/>
+      <text x="84" y="102" fill="#ff6600" font-size="9" letter-spacing="2" text-anchor="middle" font-weight="700">HITACHI ECU</text>
+      <text x="84" y="116" fill="#2a3f50" font-size="8" text-anchor="middle">443 906 022</text>
+      <text x="84" y="136" fill="#b0c8d8" font-size="8" text-anchor="middle">28-PIN SOCKET</text>
+      <text x="84" y="149" fill="#2a3f50" font-size="8" text-anchor="middle">27C256 footprint</text>
+      <text x="84" y="172" fill="#39ff14" font-size="8" text-anchor="middle">Vcc  Pin 28 → 5V rail</text>
+      <text x="84" y="185" fill="#2a3f50" font-size="8" text-anchor="middle">GND  Pin 14 → 0V</text>
+      <text x="84" y="205" fill="#00e5ff" font-size="8" text-anchor="middle">A0–A14  address bus</text>
+      <text x="84" y="218" fill="#00e5ff" font-size="8" text-anchor="middle">D0–D7  data bus</text>
+      <text x="84" y="231" fill="#00e5ff" font-size="8" text-anchor="middle">/OE  /CE  controls</text>
+      <text x="84" y="254" fill="#b0c8d8" font-size="8" text-anchor="middle">Button 1 — MAP select</text>
+      <text x="84" y="267" fill="#2a3f50" font-size="8" text-anchor="middle">D30 · momentary to GND</text>
+      <text x="84" y="288" fill="#b0c8d8" font-size="8" text-anchor="middle">LED indicator</text>
+      <text x="84" y="301" fill="#2a3f50" font-size="8" text-anchor="middle">D31 → 220Ω → LED → GND</text>
+
+      <!-- ECU 5V → Level Shift -->
+      <line x1="158" y1="174" x2="198" y2="174" stroke="#39ff14" stroke-width="1.5" marker-end="url(#mg)"/>
+      <text x="176" y="167" fill="#39ff14" font-size="8" text-anchor="middle">5V</text>
+
+      <!-- ECU bus → Level Shift -->
+      <line x1="158" y1="218" x2="198" y2="218" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#ma)"/>
+      <text x="176" y="211" fill="#00e5ff" font-size="8" text-anchor="middle">5V bus</text>
+
+      <!-- ── LEVEL SHIFTERS ── -->
+      <rect x="200" y="120" width="126" height="130" rx="2" fill="#090d10" stroke="#1e2e3a"/>
+      <rect x="200" y="120" width="126" height="3" fill="#00e5ff"/>
+      <text x="263" y="141" fill="#00e5ff" font-size="9" letter-spacing="2" text-anchor="middle" font-weight="700">LEVEL SHIFT</text>
+      <text x="263" y="155" fill="#b0c8d8" font-size="8" text-anchor="middle">74HCT245 × 3</text>
+      <text x="263" y="171" fill="#2a3f50" font-size="8" text-anchor="middle">5V input ↔ 3.3V output</text>
+      <text x="263" y="187" fill="#b0c8d8" font-size="8" text-anchor="middle">U2: D0–D7  data</text>
+      <text x="263" y="201" fill="#b0c8d8" font-size="8" text-anchor="middle">U3: A0–A7  addr lo</text>
+      <text x="263" y="215" fill="#b0c8d8" font-size="8" text-anchor="middle">U4: A8–A14 /OE /CE</text>
+      <text x="263" y="235" fill="#2a3f50" font-size="8" text-anchor="middle">Vcc = 5V · GND = 0V</text>
+
+      <!-- Level Shift → Teensy -->
+      <line x1="326" y1="185" x2="374" y2="185" stroke="#00e5ff" stroke-width="1.5" marker-end="url(#ma)"/>
+      <text x="349" y="178" fill="#00e5ff" font-size="8" text-anchor="middle">3.3V</text>
+
+      <!-- ── TEENSY 4.1 ── -->
+      <rect x="376" y="40" width="210" height="320" rx="3" fill="#050c12" stroke="#00e5ff" stroke-width="1.5"/>
+      <rect x="376" y="40" width="210" height="4" fill="#00e5ff"/>
+      <text x="481" y="62" fill="#00e5ff" font-size="11" letter-spacing="3" font-weight="700" text-anchor="middle">TEENSY 4.1</text>
+      <text x="481" y="77" fill="#2a3f50" font-size="7" text-anchor="middle">600MHz ARM M7 · 1MB RAM · FlexIO · SD card · USB HS</text>
+
+      <line x1="394" y1="86" x2="570" y2="86" stroke="#141e26" stroke-width="0.8"/>
+      <text x="394" y="100" fill="#39ff14" font-size="7.5">FlexIO  — EPROM emulation</text>
+      <text x="394" y="112" fill="#2a3f50" font-size="7">D0–D7 / A0–A14 / /OE / /CE via 74HCT245</text>
+
+      <line x1="394" y1="122" x2="570" y2="122" stroke="#141e26" stroke-width="0.8"/>
+      <text x="394" y="136" fill="#00e5ff" font-size="7.5">VIN  ← EPROM socket pin 28  (5V)</text>
+      <text x="394" y="148" fill="#2a3f50" font-size="7">GND ← socket pin 14  · Teensy reg → 3.3V internal</text>
+
+      <line x1="394" y1="158" x2="570" y2="158" stroke="#141e26" stroke-width="0.8"/>
+      <text x="394" y="172" fill="#ffcc00" font-size="7.5">SD card  — tune.bin / stock.bin / maps/</text>
+      <text x="394" y="184" fill="#2a3f50" font-size="7">ROM loaded on boot · fallback to stock.bin</text>
+
+      <line x1="394" y1="194" x2="570" y2="194" stroke="#141e26" stroke-width="0.8"/>
+      <text x="394" y="208" fill="#ff6600" font-size="7.5">D30  ← MAP select button  (INPUT_PULLUP)</text>
+      <text x="394" y="220" fill="#ff6600" font-size="7.5">D31  → LED  220Ω</text>
+      <text x="394" y="232" fill="#2a3f50" font-size="7">Hold 2s = cycle map · blink = map number</text>
+
+      <line x1="394" y1="242" x2="570" y2="242" stroke="#141e26" stroke-width="0.8"/>
+      <text x="394" y="256" fill="#b0c8d8" font-size="7.5">USB HS  → laptop  (live tuning app)</text>
+      <text x="394" y="268" fill="#2a3f50" font-size="7">serial protocol · ROM r/w · map switch · status</text>
+
+      <line x1="394" y1="278" x2="570" y2="278" stroke="#141e26" stroke-width="0.8"/>
+      <text x="394" y="292" fill="#2a3f50" font-size="7.5">Future: Serial1 → Spartan 3 wideband</text>
+      <text x="394" y="304" fill="#2a3f50" font-size="7">Future: ADC1 → MAP sensor · ADC2 → knock</text>
+      <text x="394" y="316" fill="#2a3f50" font-size="7">Future: D2–D5 → injector trim MOSFETs</text>
+      <text x="394" y="330" fill="#2a3f50" font-size="7">(Full version only — no hardware changes needed)</text>
+
+      <!-- ── SD CARD block ── -->
+      <rect x="660" y="40" width="160" height="80" rx="2" fill="#090d10" stroke="#1e2e3a"/>
+      <rect x="660" y="40" width="160" height="3" fill="#ffcc00"/>
+      <text x="740" y="60" fill="#ffcc00" font-size="9" letter-spacing="2" text-anchor="middle" font-weight="700">SD CARD  (built-in)</text>
+      <text x="740" y="76" fill="#b0c8d8" font-size="8" text-anchor="middle">tune.bin  — active ROM</text>
+      <text x="740" y="89" fill="#b0c8d8" font-size="8" text-anchor="middle">stock.bin — fallback</text>
+      <text x="740" y="103" fill="#2a3f50" font-size="8" text-anchor="middle">maps/map1.bin … map8.bin</text>
+      <line x1="660" y1="80" x2="588" y2="176" stroke="#ffcc00" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#my)"/>
+
+      <!-- ── USB block ── -->
+      <rect x="660" y="140" width="160" height="60" rx="2" fill="#090d10" stroke="#1e2e3a"/>
+      <rect x="660" y="140" width="160" height="3" fill="#b0c8d8"/>
+      <text x="740" y="160" fill="#b0c8d8" font-size="9" letter-spacing="2" text-anchor="middle" font-weight="700">USB — LAPTOP</text>
+      <text x="740" y="176" fill="#b0c8d8" font-size="8" text-anchor="middle">live ROM editor</text>
+      <text x="740" y="189" fill="#2a3f50" font-size="8" text-anchor="middle">map switch · status · datalog</text>
+      <line x1="660" y1="162" x2="588" y2="260" stroke="#b0c8d8" stroke-width="1" stroke-dasharray="4,2"/>
+
+      <!-- ── MAP BUTTON + LED ── -->
+      <rect x="660" y="220" width="160" height="80" rx="2" fill="#090d10" stroke="#1e2e3a"/>
+      <rect x="660" y="220" width="160" height="3" fill="#ff6600"/>
+      <text x="740" y="240" fill="#ff6600" font-size="9" letter-spacing="2" text-anchor="middle" font-weight="700">CONTROLS</text>
+      <text x="740" y="256" fill="#b0c8d8" font-size="8" text-anchor="middle">MAP SELECT button</text>
+      <text x="740" y="269" fill="#2a3f50" font-size="8" text-anchor="middle">D30 · momentary · to GND</text>
+      <text x="740" y="284" fill="#b0c8d8" font-size="8" text-anchor="middle">STATUS LED  D31 → 220Ω</text>
+      <line x1="660" y1="256" x2="588" y2="210" stroke="#ff6600" stroke-width="1" marker-end="url(#mo)"/>
+
+      <!-- ── POWER NOTE ── -->
+      <rect x="660" y="320" width="160" height="68" rx="2" fill="#090d10" stroke="#1e2e3a"/>
+      <rect x="660" y="320" width="160" height="3" fill="#39ff14"/>
+      <text x="740" y="340" fill="#39ff14" font-size="9" letter-spacing="2" text-anchor="middle" font-weight="700">POWER SOURCE</text>
+      <text x="740" y="356" fill="#b0c8d8" font-size="8" text-anchor="middle">Socket pin 28 → Teensy VIN</text>
+      <text x="740" y="369" fill="#b0c8d8" font-size="8" text-anchor="middle">Socket pin 14 → GND</text>
+      <text x="740" y="382" fill="#ffcc00" font-size="8" text-anchor="middle">⚠ verify 7805 regulator first</text>
+      <line x1="660" y1="350" x2="588" y2="143" stroke="#39ff14" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#mg)"/>
+
+    </svg>
+  </div>
+
+  <div class="g3">
+    <div class="blk c-cyan">
+      <div class="blk-t">EPROM Bus — FlexIO</div>
+      <div class="pr"><span class="pn">D0–D7</span><span class="pl">Data bus (8-bit)</span><span class="pd t-cyan">Pins 2–9</span></div>
+      <div class="pr"><span class="pn">A0–A7</span><span class="pl">Address low</span><span class="pd t-cyan">Pins 10–17</span></div>
+      <div class="pr"><span class="pn">A8–A14</span><span class="pl">Address high</span><span class="pd t-cyan">Pins 18–24</span></div>
+      <div class="pr"><span class="pn">/OE</span><span class="pl">Output enable</span><span class="pd t-cyan">Pin 27</span></div>
+      <div class="pr"><span class="pn">/CE</span><span class="pl">Chip enable</span><span class="pd t-cyan">Pin 28</span></div>
+      <div class="note"><strong>LEVEL SHIFT:</strong> All lines via 74HCT245 ×3. Data bus bidirectional — DIR controlled by /OE state. Address/control unidirectional ECU→Teensy.</div>
+    </div>
+
+    <div class="blk c-green">
+      <div class="blk-t">Power — From Socket</div>
+      <div class="pr"><span class="pn">Pin 28</span><span class="pl">EPROM Vcc (5V)</span><span class="pd t-green">→ Teensy VIN</span></div>
+      <div class="pr"><span class="pn">Pin 14</span><span class="pl">EPROM GND</span><span class="pd t-green">→ Teensy GND</span></div>
+      <div class="pr"><span class="pn">74HCT</span><span class="pl">Vcc for level shifters</span><span class="pd t-green">same 5V rail</span></div>
+      <div class="pr"><span class="pn">3.3V</span><span class="pl">Teensy internal LDO</span><span class="pd t-green">no external reg needed</span></div>
+      <div class="note"><strong>PRE-CHECK:</strong> Open ECU, find 5V regulator IC. TO-220 package = 7805 (1A) = fine. Small SOT-89/TO-92 = 78L05 (100mA) = add external 12V→5V supply. The 7A Hitachi almost certainly uses a 7805 — confirm before connecting.</div>
+    </div>
+
+    <div class="blk c-orange">
+      <div class="blk-t">Controls + Status</div>
+      <div class="pr"><span class="pn">D30</span><span class="pl">MAP select button</span><span class="pd t-orange">INPUT_PULLUP → GND</span></div>
+      <div class="pr"><span class="pn">D31</span><span class="pl">Status LED</span><span class="pd t-orange">220Ω → LED → GND</span></div>
+      <div class="pr"><span class="pn">USB</span><span class="pl">Live tuning / laptop</span><span class="pd t-orange">Micro USB cable</span></div>
+      <div class="note"><strong>MAP BUTTON BEHAVIOUR:</strong> Short press = cycle to next map. Hold 2s = reload current. LED blinks = map number (1 blink = map 1, etc). Steady = active. Rapid = SD error.</div>
+    </div>
+  </div>
+
+  <div class="blk c-yellow" style="margin-bottom:16px;">
+    <div class="blk-t">SD Card Layout — File Structure</div>
+    <div class="g3">
+      <div>
+        <div class="pr"><span class="pn">tune.bin</span><span class="pl t-yellow">Active ROM — loaded on boot</span></div>
+        <div class="pr"><span class="pn">stock.bin</span><span class="pl">Factory fallback — panic recovery</span></div>
+        <div class="pr"><span class="pn">maps/</span><span class="pl">Map bank folder</span></div>
+      </div>
+      <div>
+        <div class="pr"><span class="pn">map1.bin</span><span class="pl">Bank 1 — e.g. stock base</span></div>
+        <div class="pr"><span class="pn">map2.bin</span><span class="pl">Bank 2 — e.g. current tune</span></div>
+        <div class="pr"><span class="pn">map3–8</span><span class="pl t-dim">Banks 3–8 optional</span></div>
+      </div>
+      <div>
+        <div class="info"><strong>SWITCHING:</strong> Button press copies selected map to tune.bin. Teensy reloads from SD on next power cycle (ECU restart). No physical chip swap needed.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ POWER ════════ -->
+<div id="tab-power" class="content">
+
+  <div class="crit" style="margin-bottom:20px;">
+    <strong>VERIFY BEFORE CONNECTING:</strong> Open the ECU and identify the 5V voltage regulator before drawing power from the EPROM socket. The regulator is usually near the power connector on the board. TO-220 (large, with mounting tab) = 7805 or equivalent ≥ 1A — safe. Small 3-leg IC in SOT-89 or TO-92 = 78L05 = 100mA max — NOT sufficient.
+  </div>
+
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="blk c-green">
+      <div class="blk-t">Path A — Power from EPROM Socket (preferred)</div>
+      <div class="power-path">
+        <div class="pp-node" style="border-color:#ff6600; color:#ff6600;">ECU<br>5V reg</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node" style="border-color:#39ff14; color:#39ff14;">Socket<br>Pin 28</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node">Teensy<br>VIN</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node" style="border-color:#00e5ff; color:#00e5ff;">Internal<br>LDO</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node" style="border-color:#00e5ff; color:#00e5ff;">3.3V<br>rail</div>
+      </div>
+      <div class="pr"><span class="pn">Vcc</span><span class="pl">Socket pin 28 → Teensy VIN</span><span class="pd t-green">5V, ECU rail</span></div>
+      <div class="pr"><span class="pn">GND</span><span class="pl">Socket pin 14 → Teensy GND</span><span class="pd t-green">0V, ECU rail</span></div>
+      <div class="pr"><span class="pn">74HCT</span><span class="pl">All three Vcc pins → socket pin 28</span><span class="pd t-green">same 5V</span></div>
+      <div class="pr"><span class="pn">Current</span><span class="pl">Teensy ~250mA + 74HCT245×3 ~150mA</span><span class="pd t-green">~400mA total</span></div>
+      <div class="ok"><strong>WHY THIS WORKS:</strong> Socket pin 28 is the ECU's 5V power rail, not a dedicated EPROM supply. The 7805 on the Hitachi ECU board is rated 1A — the ECU logic itself draws ~300mA, leaving ~700mA headroom. The Teensy + level shifters need ~400mA. Comfortable margin.</div>
+    </div>
+
+    <div class="blk c-yellow">
+      <div class="blk-t">Path B — External 12V Supply (if 78L05 found)</div>
+      <div class="power-path">
+        <div class="pp-node" style="border-color:#ff6600; color:#ff6600;">IGN 12V<br>ECU conn</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node">1N5822<br>rev pol</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node">LM2596<br>→5V</div>
+        <div class="pp-arrow">→</div>
+        <div class="pp-node">Teensy<br>VIN</div>
+      </div>
+      <div class="pr"><span class="pn">12V in</span><span class="pl">Tap IGN-switched 12V at ECU harness</span></div>
+      <div class="pr"><span class="pn">Fuse</span><span class="pl">3A inline blade fuse</span></div>
+      <div class="pr"><span class="pn">LM2596</span><span class="pl">Pre-built buck module → 5.00V</span></div>
+      <div class="pr"><span class="pn">Teensy</span><span class="pl">5V → VIN pin</span></div>
+      <div class="note"><strong>ONLY NEEDED</strong> if ECU has 78L05 regulator. Adds ~$10 to BOM (LM2596 module + fuse holder). Same module used in Full version anyway.</div>
+    </div>
+  </div>
+
+  <div class="blk c-cyan">
+    <div class="blk-t">Power Budget — Lite Version</div>
+    <div class="g4">
+      <div class="pr"><span class="pn">Teensy 4.1</span><span class="pl">~250mA @ 3.3V</span><span class="pd t-cyan">from internal LDO</span></div>
+      <div class="pr"><span class="pn">74HCT245 ×3</span><span class="pl">~50mA typical (150mA max)</span><span class="pd t-cyan">5V Vcc rail</span></div>
+      <div class="pr"><span class="pn">LED</span><span class="pl">~10mA</span><span class="pd t-cyan">negligible</span></div>
+      <div class="pr"><span class="pn">TOTAL</span><span class="pl t-green">~310mA typical, ~410mA max</span><span class="pd t-green">well within 7805</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PIN MAP ════════ -->
+<div id="tab-pinout" class="content">
+
+  <div class="g2">
+    <div class="blk c-cyan">
+      <div class="blk-t">Teensy 4.1 — EPROM Bus (via 74HCT245)</div>
+      <div class="pr"><span class="pn">Pin 2</span><span class="pl">D0 — data bit 0</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 3</span><span class="pl">D1</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 4</span><span class="pl">D2</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 5</span><span class="pl">D3</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 6</span><span class="pl">D4</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 7</span><span class="pl">D5</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 8</span><span class="pl">D6</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 9</span><span class="pl">D7 — data bit 7</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 10</span><span class="pl">A0 — address bit 0</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 11</span><span class="pl">A1</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 12</span><span class="pl">A2</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 13</span><span class="pl">A3</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 14</span><span class="pl">A4</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 15</span><span class="pl">A5</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 16</span><span class="pl">A6</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 17</span><span class="pl">A7</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 18</span><span class="pl">A8</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 19</span><span class="pl">A9</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 20</span><span class="pl">A10</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 21</span><span class="pl">A11</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 22</span><span class="pl">A12</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 23</span><span class="pl">A13</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 24</span><span class="pl">A14 — address bit 14 (MSB for 27C256)</span><span class="pd t-cyan">FlexIO</span></div>
+      <div class="pr"><span class="pn">Pin 27</span><span class="pl">/OE — output enable (active low)</span><span class="pd t-cyan">input</span></div>
+      <div class="pr"><span class="pn">Pin 28</span><span class="pl">/CE — chip enable (active low)</span><span class="pd t-cyan">input</span></div>
+    </div>
+
+    <div>
+      <div class="blk c-orange" style="margin-bottom:16px;">
+        <div class="blk-t">Teensy 4.1 — Controls</div>
+        <div class="pr"><span class="pn">Pin 30</span><span class="pl">MAP select button</span><span class="pd t-orange">INPUT_PULLUP → GND</span></div>
+        <div class="pr"><span class="pn">Pin 31</span><span class="pl">Status LED output</span><span class="pd t-orange">220Ω → LED → GND</span></div>
+        <div class="pr"><span class="pn">VIN</span><span class="pl">5V power in</span><span class="pd t-green">from socket pin 28</span></div>
+        <div class="pr"><span class="pn">GND</span><span class="pl">Ground</span><span class="pd t-green">from socket pin 14</span></div>
+        <div class="pr"><span class="pn">USB</span><span class="pl">Micro USB — laptop connection</span><span class="pd">live tuning</span></div>
+      </div>
+
+      <div class="blk c-yellow" style="margin-bottom:16px;">
+        <div class="blk-t">27C256 Socket — ECU Side</div>
+        <div class="pr"><span class="pn">Pin 14</span><span class="pl">GND</span><span class="pd t-green">ECU 0V rail</span></div>
+        <div class="pr"><span class="pn">Pin 28</span><span class="pl">Vcc</span><span class="pd t-green">ECU 5V rail</span></div>
+        <div class="pr"><span class="pn">Pins 1–13</span><span class="pl">A0–A12 address (ECU drives)</span></div>
+        <div class="pr"><span class="pn">Pin 25</span><span class="pl">A13</span></div>
+        <div class="pr"><span class="pn">Pin 2</span><span class="pl">A14</span></div>
+        <div class="pr"><span class="pn">Pins 11–13</span><span class="pl">D0–D2 (Teensy drives)</span></div>
+        <div class="pr"><span class="pn">Pins 15–19</span><span class="pl">D3–D7</span></div>
+        <div class="pr"><span class="pn">Pin 20</span><span class="pl">/CE chip enable</span></div>
+        <div class="pr"><span class="pn">Pin 22</span><span class="pl">/OE output enable</span></div>
+        <div class="note"><strong>PINOUT REMINDER:</strong> 27C256 is 28 pins. Confirm orientation with notch at top-left before inserting into turned-pin socket. Pin 1 = A14 (top-left). Getting this wrong won't damage the Teensy but the ECU won't boot.</div>
+      </div>
+
+      <div class="blk c-green">
+        <div class="blk-t">Future Expansion Pins (reserved)</div>
+        <div class="pr"><span class="pn">Pin 0</span><span class="pl t-dim">SERIAL1 RX — Spartan wideband</span><span class="pd t-dim">Full ver</span></div>
+        <div class="pr"><span class="pn">Pin 1</span><span class="pl t-dim">SERIAL1 TX — Spartan wideband</span><span class="pd t-dim">Full ver</span></div>
+        <div class="pr"><span class="pn">A0</span><span class="pl t-dim">ADC — oil/fuel pressure</span><span class="pd t-dim">Full ver</span></div>
+        <div class="pr"><span class="pn">A1</span><span class="pl t-dim">ADC — MAP sensor</span><span class="pd t-dim">Full ver</span></div>
+        <div class="pr"><span class="pn">A2</span><span class="pl t-dim">ADC — knock sensor</span><span class="pd t-dim">Full ver</span></div>
+        <div class="info"><strong>PCB NOTE:</strong> Leave pads for these when doing PCB layout. Populate only for Full version build. Zero cost on Lite PCB — just unpopulated pads.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ BUILD STEPS ════════ -->
+<div id="tab-build" class="content">
+
+  <div class="info" style="margin-bottom:20px;">
+    <strong>PHILOSOPHY:</strong> Every stage independently testable before connecting to the ECU. Bench validate power → level shifters → firmware → then ECU. The Lite version has fewer stages than Full — you can be at Stage 05 (first ECU connection) in an afternoon.
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">00</div>
+      <div class="step-body">
+        <h3>Physical chip read — done ✓</h3>
+        <p>MMS-05C HF201Y43 already read with T48 XGPro. Binary saved at <span class="mono">rom_files/physical_reads/893906266D_MMS05C_physical.bin</span>. CRC32: 0x4152E167. This is the recovery file — if anything goes wrong you can re-burn this to a blank 27C256A and the ECU runs as before. Do not proceed without this.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">01</div>
+      <div class="step-body">
+        <h3>Identify ECU 5V regulator</h3>
+        <p>Open ECU, locate the 5V regulator near the power input connector. <strong>TO-220 package with metal tab and mounting hole = 7805 or equivalent (≥1A) — proceed with socket power (Path A).</strong> Small 3-leg SOT-89 or TO-92 = 78L05 (100mA) — use external LM2596 supply (Path B). Almost certainly a 7805 on the Hitachi 266D board. Write it down for the build notes.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">02</div>
+      <div class="step-body">
+        <h3>Install turned-pin socket in ECU</h3>
+        <p>Desolder MMS-05C from ECU board. Clean pads. Install 28-pin turned-pin DIP socket (gold contacts). Turned-pin contacts give low insertion force and long life vs standard sockets. Verify correct orientation — notch matches original chip orientation. Do not install the Teensy adapter yet.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">03</div>
+      <div class="step-body">
+        <h3>Bench power test — Teensy only</h3>
+        <p>Connect Teensy VIN → 5V bench supply, GND → bench GND. Confirm USB enumeration on laptop. Flash blink sketch from Arduino IDE + Teensyduino. LED on pin 13 should blink 1Hz. This proves the Teensy is alive and programmable. Measure 3.3V on Teensy 3.3V pin = internal LDO working.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">04</div>
+      <div class="step-body">
+        <h3>Level shifter bench test</h3>
+        <p>Wire 74HCT245 ×3 between a DIP28 ZIF socket (as ECU substitute) and Teensy FlexIO pins per the pin map. Flash EPROM emulator firmware with stock ROM image embedded. Use logic analyzer on address/data lines — drive address pins with signal generator, confirm Teensy returns correct data bytes within ~150ns. No ECU connected yet — just the ZIF socket with address/data pins driven manually.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">05</div>
+      <div class="step-body">
+        <h3>SD card test</h3>
+        <p>Format SD card FAT32. Copy <span class="mono">tune.bin</span> (physical read binary) and <span class="mono">stock.bin</span> (same file, recovery copy) to root. Create <span class="mono">maps/</span> folder, copy <span class="mono">map1.bin</span> through <span class="mono">map2.bin</span>. Flash firmware — confirm SD mounts on boot (LED steady green = OK, rapid blink = SD error). Confirm map cycling with button on pin 30.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">06</div>
+      <div class="step-body">
+        <h3>First ECU connection — engine off, fuel pump relay out</h3>
+        <p>Remove fuel pump relay as a precaution. Connect Teensy adapter into turned-pin socket in ECU. Teensy powered from socket pin 28 (5V). Ignition on — logic analyzer on address bus should immediately show ECU initiating reads within milliseconds of power-up. Teensy responds with ROM data. Verify timing — ECU expects data within 200ns of address stable. No address mismatches, no bus conflicts.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">07</div>
+      <div class="step-body">
+        <h3>First start — EPROM emulation only</h3>
+        <p>Restore fuel pump relay. Start engine. Should run identically to stock chip — because it IS the stock chip image. If engine runs normally: foundation is confirmed. If rough or no start: EPROM timing issue, return to bench. Once running cleanly on emulated ROM, you can load a modified tune.bin via USB from the tuner app and restart — that's the core Lite workflow.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">08</div>
+      <div class="step-body">
+        <h3>Map switching — validate</h3>
+        <p>With two different tune files on SD as map1.bin and map2.bin (make one with a single byte changed so you can verify it loaded), use the button to switch maps. Confirm LED blink count matches map number. Restart ECU (ignition off/on). Confirm tuner app reports correct ROM CRC for the selected map. You now have a working map switcher.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ BOM ════════ -->
+<div id="tab-bom" class="content">
+
+  <div class="ok" style="margin-bottom:20px;">
+    <strong>LITE BOM PHILOSOPHY:</strong> Minimum parts to validate EPROM emulation and map switching before committing to full build. Everything here is also needed for the Full version — zero wasted spend. If ECU regulator is 7805, total comes to ~$80. Parts arrive, you build in a day.
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th width="55">Ref</th>
+        <th>Component</th>
+        <th>Spec / Notes</th>
+        <th width="50" style="text-align:center">Qty</th>
+        <th width="80" style="text-align:right">Est. USD</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr class="cat"><td colspan="5">── MICROCONTROLLER</td></tr>
+      <tr>
+        <td class="ref">U1</td>
+        <td>
+          <div class="pname">Teensy 4.1 (with pins soldered)</div>
+          <div class="pnote">PJRC — 600MHz ARM M7, FlexIO, built-in SD socket, USB HS, 55 I/O. Order with pins pre-soldered or solder yourself.</div>
+          <a class="amz" href="https://www.amazon.com/PJRC-Teensy-4-1-with-Pins/dp/B08CTM3279" target="_blank">▶ AMAZON</a>
+        </td>
+        <td class="pspec">NXP iMXRT1062 · 1MB RAM · 8MB flash · 3.3–5V input</td>
+        <td class="qty">1</td>
+        <td class="price">~$35</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── LEVEL SHIFTING</td></tr>
+      <tr>
+        <td class="ref">U2–U4</td>
+        <td>
+          <div class="pname">74HCT245 Octal Bus Transceiver DIP-20</div>
+          <div class="pnote">Buy Major Brands or Nexperia — avoid Todiys brand (reported issues with Teensy timing). Buy 5, use 3.</div>
+          <a class="amz" href="https://www.amazon.com/Tri-State-Octal-Bus-Transceiver/dp/B00GAGAZDA" target="_blank">▶ AMAZON — MAJOR BRANDS</a>
+        </td>
+        <td class="pspec">5V Vcc · 3.3V-input compatible · bidirectional · DIP-20</td>
+        <td class="qty">5pk</td>
+        <td class="price">~$6</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── EPROM SOCKET</td></tr>
+      <tr>
+        <td class="ref">J1</td>
+        <td>
+          <div class="pname">28-Pin Turned-Pin DIP Socket (gold contacts)</div>
+          <div class="pnote">Installs in ECU in place of MMS-05C chip. Turned-pin (machined) contacts recommended over stamped — more reliable long-term and lower contact resistance. Narrow DIP-28, 2.54mm pitch.</div>
+          <a class="amz" href="https://www.amazon.com/s?k=28+pin+turned+pin+dip+socket+machined+gold" target="_blank">▶ AMAZON SEARCH</a>
+        </td>
+        <td class="pspec">Narrow DIP-28 · 2.54mm · turned-pin / machined contacts · gold plated</td>
+        <td class="qty">2</td>
+        <td class="price">~$6</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── SD CARD</td></tr>
+      <tr>
+        <td class="ref">SD1</td>
+        <td>
+          <div class="pname">MicroSD Card 8–32GB (class 10)</div>
+          <div class="pnote">FAT32 formatted. Any class 10 card works. Stores tune.bin, stock.bin, maps/map1–8.bin. Slots into Teensy 4.1 built-in socket — no adapter needed.</div>
+          <a class="amz" href="https://www.amazon.com/s?k=microsd+card+32gb+class+10" target="_blank">▶ AMAZON SEARCH</a>
+        </td>
+        <td class="pspec">FAT32 · 8–32GB · class 10 · microSD</td>
+        <td class="qty">1</td>
+        <td class="price">~$8</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── CONTROLS</td></tr>
+      <tr>
+        <td class="ref">SW1</td>
+        <td>
+          <div class="pname">Momentary Tactile Push Button (10-pack)</div>
+          <div class="pnote">MAP select button. Wires to D30 and GND. For in-car install consider a panel-mount momentary button with weather seal.</div>
+          <a class="amz" href="https://www.amazon.com/s?k=momentary+tactile+push+button+breadboard" target="_blank">▶ AMAZON SEARCH</a>
+        </td>
+        <td class="pspec">Normally open · momentary · 2-pin or 4-pin · breadboard compatible</td>
+        <td class="qty">1pk</td>
+        <td class="price">~$4</td>
+      </tr>
+      <tr>
+        <td class="ref">LED1</td>
+        <td>
+          <div class="pname">3mm LEDs assorted + 220Ω resistors</div>
+          <div class="pnote">Status indicator. Green for normal operation. Red for error state. 220Ω current limit resistor in series from D31.</div>
+          <a class="amz" href="https://www.amazon.com/s?k=3mm+LED+assorted+colors+resistors" target="_blank">▶ AMAZON SEARCH</a>
+        </td>
+        <td class="pspec">3mm · green + red · 2.0–2.2V forward · 220Ω series resistor</td>
+        <td class="qty">1pk</td>
+        <td class="price">~$4</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── POWER (Path A — most likely, no extra parts)</td></tr>
+      <tr>
+        <td class="ref">—</td>
+        <td>
+          <div class="pname">No extra power components if ECU has 7805</div>
+          <div class="pnote">Teensy + 74HCT245s draw ~400mA from socket pin 28 (ECU 5V rail). 7805 regulator on Hitachi ECU is rated 1A and has sufficient headroom. Verify regulator package on ECU board before connecting.</div>
+        </td>
+        <td class="pspec">—</td>
+        <td class="qty">—</td>
+        <td class="price">$0</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── POWER (Path B — only if 78L05 found on ECU)</td></tr>
+      <tr>
+        <td class="ref">U5</td>
+        <td>
+          <div class="pname">LM2596 Buck Converter Module (5-pack)</div>
+          <div class="pnote">Only needed if ECU has 78L05 (100mA) regulator. Tap 12V IGN from ECU harness. Set to 5.00V before connecting.</div>
+          <a class="amz" href="https://www.amazon.com/LM2596-Converter-3-0-40V-1-5-35V-Supply/dp/B08NV3JCBC" target="_blank">▶ AMAZON</a>
+        </td>
+        <td class="pspec">3–40V in · adjustable out · 3A · onboard voltmeter</td>
+        <td class="qty">1pk</td>
+        <td class="price">~$10*</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── PASSIVES + PROTOTYPING</td></tr>
+      <tr>
+        <td class="ref">R-KIT</td>
+        <td>
+          <div class="pname">Resistor Kit (for LED current limiters)</div>
+          <div class="pnote">Need 220Ω for LED. A basic resistor kit covers this and everything in the Full version later.</div>
+          <a class="amz" href="https://www.amazon.com/s?k=resistor+assortment+600+pieces+metal+film" target="_blank">▶ AMAZON SEARCH</a>
+        </td>
+        <td class="pspec">220Ω · 10kΩ · assorted · 1% metal film</td>
+        <td class="qty">1 kit</td>
+        <td class="price">~$8</td>
+      </tr>
+      <tr>
+        <td class="ref">BB</td>
+        <td>
+          <div class="pname">830-Point Breadboard (2-pack) + jumper wires</div>
+          <div class="pnote">For bench validation before PCB. Wire level shifters, test EPROM emulation before going near the ECU.</div>
+          <a class="amz" href="https://www.amazon.com/s?k=830+breadboard+jumper+wire+kit" target="_blank">▶ AMAZON SEARCH</a>
+        </td>
+        <td class="pspec">Full size · 830 tie points · + Dupont wire kit</td>
+        <td class="qty">1pk</td>
+        <td class="price">~$12</td>
+      </tr>
+
+      <tr class="cat"><td colspan="5">── TOOLS (if not already owned)</td></tr>
+      <tr>
+        <td class="ref">PROG</td>
+        <td>
+          <div class="pname">T48 / TL866-3G EPROM Programmer</div>
+          <div class="pnote">Already owned — used to read MMS-05C chip. Needed again only if writing a blank 27C256A for recovery purposes.</div>
+        </td>
+        <td class="pspec">Already owned ✓</td>
+        <td class="qty">—</td>
+        <td class="price">owned</td>
+      </tr>
+
+      <tr class="total">
+        <td colspan="4">LITE TOTAL — Path A (7805 ECU, most likely)</td>
+        <td class="price">~$83</td>
+      </tr>
+      <tr class="total">
+        <td colspan="4">LITE TOTAL — Path B (add LM2596 if 78L05 ECU)</td>
+        <td class="price">~$93</td>
+      </tr>
+      <tr>
+        <td colspan="5" style="padding:10px 12px; color:var(--mid); font-size:12px; border-bottom:none; font-family:'IBM Plex Mono',monospace;">
+          All components also used in Full version — zero wasted spend when upgrading.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════ LITE vs FULL ════════ -->
+<div id="tab-scope" class="content">
+
+  <div class="divider">version comparison</div>
+
+  <div class="compare-row">
+    <div class="compare-lite">
+      <div class="compare-hdr">LITE v1 — BUILD NOW</div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">EPROM emulation (core function)</span></div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">Map switching (SD card, button)</span></div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">USB live ROM edit via tuner app</span></div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">ROM CRC / ECU version display</span></div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">SD datalog (ROM state, map active)</span></div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">Power from EPROM socket (no extras)</span></div>
+      <div class="feat-row"><span class="feat-no">—</span><span class="feat-txt-out">Wideband / Lambda</span></div>
+      <div class="feat-row"><span class="feat-no">—</span><span class="feat-txt-out">MAP sensor input</span></div>
+      <div class="feat-row"><span class="feat-no">—</span><span class="feat-txt-out">Knock sensor</span></div>
+      <div class="feat-row"><span class="feat-no">—</span><span class="feat-txt-out">Injector pulse trim</span></div>
+      <div class="feat-row"><span class="feat-no">—</span><span class="feat-txt-out">CAN bus / OBD2</span></div>
+      <div class="feat-row"><span class="feat-no">—</span><span class="feat-txt-out">MAF intercept / correction</span></div>
+    </div>
+    <div class="compare-full">
+      <div class="compare-hdr">FULL — LATER (same PCB, more parts)</div>
+      <div class="feat-row"><span class="feat-yes">✓</span><span class="feat-txt-in">Everything in Lite</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">Spartan 3 Lite OEM + LSU ADV wideband</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">GM 3-bar MAP sensor</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">Bosch knock sensor + FFT detection</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">Injector pulse trim (IRLZ44N ×4)</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">AFR / MAP / knock datalogging</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">Closed-loop Lambda correction</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">TPS / IAT sensor reads</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">MAF freq intercept / 2.6L correction</span></div>
+      <div class="feat-row"><span class="feat-yes">+</span><span class="feat-txt-in">CAN bus OBD2 / gauge (optional)</span></div>
+    </div>
+  </div>
+
+  <div class="divider">upgrade path</div>
+
+  <div class="blk c-lite">
+    <div class="blk-t">Lite → Full Upgrade — What Changes</div>
+    <div class="g3">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--lite); margin-bottom:8px; letter-spacing:2px;">HARDWARE ADDS</div>
+        <div class="pr"><span class="pn">add</span><span class="pl">Spartan 3 Lite OEM + LSU ADV</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">GM 3-bar MAP + voltage divider</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">Knock sensor bias circuit</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">IRLZ44N ×4 + flybacks + gate R</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">10k/20k UART voltage divider</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">TJA1051 ×2 (optional, CAN)</span></div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--lite); margin-bottom:8px; letter-spacing:2px;">NOTHING CHANGES</div>
+        <div class="pr"><span class="pn">same</span><span class="pl">Teensy 4.1 — identical unit</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">74HCT245 ×3 — same chips</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">Socket + wiring to ECU</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">SD card layout</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">Pin assignments D0–D7, A0–A14</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">Map switch button + LED</span></div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--lite); margin-bottom:8px; letter-spacing:2px;">FIRMWARE</div>
+        <div class="pr"><span class="pn">add</span><span class="pl">UART Lambda reader (Serial1)</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">ADC reads (MAP / knock / TPS)</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">Injector pulse intercept loop</span></div>
+        <div class="pr"><span class="pn">add</span><span class="pl">Closed-loop correction PID</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">FlexIO EPROM core — unchanged</span></div>
+        <div class="pr"><span class="pn">same</span><span class="pl">USB serial protocol — extended</span></div>
+      </div>
+    </div>
+    <div class="ok" style="margin-top:12px;"><strong>CLEAN UPGRADE PATH:</strong> Lite validates the core — EPROM emulation working, map switching working, USB protocol working. Full adds sensor hardware on top of a proven foundation. No rework of what already works.</div>
+  </div>
+</div>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
