@@ -422,17 +422,98 @@ class OfflineRomEditor(QWidget):
         sl.addStretch()
         self.map_tabs.addTab(scalars_widget, "Scalars & 1-D")
 
-        # Tab 4: MAF Linearization (266B only)
+        # Tab 4: MAF Linearization (266B and 266D — same address 0x02D0)
         self.maf_widget = QWidget()
         ml = QVBoxLayout(self.maf_widget); ml.setContentsMargins(0,0,0,0)
         ml.addWidget(QLabel(
-            "MAF Linearization — 1×64  |  16-bit big-endian values  |  266B ONLY\n"
-            "Maps MAF sensor frequency to load signal. Edit with caution.",
+            "MAF Linearization — 1×64  |  16-bit big-endian values  |  266B + 266D\n"
+            "Maps MAF sensor frequency → load signal.  "
+            "034 RIP Chip only exposes this for 266B but 266D ROM contains identical table at same address.\n"
+            "Different MAF housings (Coupe vs Sedan) or sensor swaps may require recalibration here.",
             styleSheet="color:#3d5068; font-size:11px; padding:4px 0;"))
         self.maf_table = _OneDTable(64, sixteen_bit=True)
         self.maf_table.value_changed.connect(self._on_edit)
         ml.addWidget(self.maf_table)
-        self.maf_tab_idx = self.map_tabs.addTab(self.maf_widget, "MAF Lin (266B)")
+        self.maf_tab_idx = self.map_tabs.addTab(self.maf_widget, "MAF Lin")
+
+        # Tab 5: Warmup / Idle Enrichment  (HIGH confidence — axis+data pattern confirmed)
+        self.warmup_widget = QWidget()
+        wl = QVBoxLayout(self.warmup_widget); wl.setContentsMargins(0,0,0,0)
+        wl.addWidget(QLabel(
+            "Warmup / Idle Enrichment — 1×16  |  Axis=RPM (250–4000)  |  @ 0x06C0 / 0x06D0\n"
+            "Fuel enrichment vs RPM at idle/warmup. 200=richest (cold idle), tapers to 98 at higher RPM.\n"
+            "Identical in 266B and 266D. Affects cold start behaviour and idle quality.",
+            styleSheet="color:#3d5068; font-size:11px; padding:4px 0;"))
+        WARMUP_AXIS = [v*25 for v in [10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160]]
+        wl.addWidget(QLabel("RPM axis: " + "  ".join(str(v) for v in WARMUP_AXIS),
+                            styleSheet="color:#5a7a90; font-size:10px; font-family:monospace; padding:2px 0;"))
+        self.warmup_table = _OneDTable(16)
+        self.warmup_table.value_changed.connect(self._on_edit)
+        wl.addWidget(self.warmup_table)
+        wl.addStretch()
+        self.warmup_tab_idx = self.map_tabs.addTab(self.warmup_widget, "Warmup Enrich")
+
+        # Tab 6: Extra Decel Map  (HIGH confidence — immediately follows documented decel)
+        self.decel2_widget = QWidget()
+        d2l = QVBoxLayout(self.decel2_widget); d2l.setContentsMargins(0,0,0,0)
+        d2l.addWidget(QLabel(
+            "Extra Decel Maps — 2×8  |  @ 0x0E40  |  raw values (×0.3922 = kPa approx)\n"
+            "Two 8-entry threshold tables immediately after documented decel cutoff.\n"
+            "Likely separate decel fuel-cut thresholds for different conditions (e.g. hot/cold or partial/closed throttle).\n"
+            "⚠ Purpose inferred — not documented by 034. Edit with caution.",
+            styleSheet="color:#7a6030; font-size:11px; padding:4px 0;"))
+        d2l.addWidget(QLabel("Row A (0x0E40, 8 entries):",
+                             styleSheet="color:#5a7a90; font-size:10px; padding:2px 0;"))
+        self.decel2a_table = _OneDTable(8)
+        self.decel2a_table.value_changed.connect(self._on_edit)
+        d2l.addWidget(self.decel2a_table)
+        d2l.addWidget(QLabel("Row B (0x0E48, 8 entries):",
+                             styleSheet="color:#5a7a90; font-size:10px; padding:2px 0;"))
+        self.decel2b_table = _OneDTable(8)
+        self.decel2b_table.value_changed.connect(self._on_edit)
+        d2l.addWidget(self.decel2b_table)
+        d2l.addStretch()
+        self.decel2_tab_idx = self.map_tabs.addTab(self.decel2_widget, "Decel Extra")
+
+        # Tab 7: Overrun Curves  (MEDIUM confidence)
+        self.overrun_widget = QWidget()
+        ol = QVBoxLayout(self.overrun_widget); ol.setContentsMargins(0,0,0,0)
+        ol.addWidget(QLabel(
+            "Overrun / Fuel-Cut Curves — 4×16  |  @ 0x0550–0x0580\n"
+            "Four 16-entry tables with sharply decreasing values (255→12).\n"
+            "Likely overrun fuel-cut ramp curves vs load — each row may correspond to a different RPM band.\n"
+            "⚠ Purpose inferred from data shape — not documented by 034.",
+            styleSheet="color:#7a6030; font-size:11px; padding:4px 0;"))
+        self.overrun_tables = []
+        labels = ["Row A (0x0550)", "Row B (0x0560)", "Row C (0x0570)", "Row D (0x0580)"]
+        for lbl in labels:
+            ol.addWidget(QLabel(lbl, styleSheet="color:#5a7a90; font-size:10px; padding:2px 0;"))
+            t = _OneDTable(16)
+            t.value_changed.connect(self._on_edit)
+            ol.addWidget(t)
+            self.overrun_tables.append(t)
+        ol.addStretch()
+        self.overrun_tab_idx = self.map_tabs.addTab(self.overrun_widget, "Overrun Curves")
+
+        # Tab 8: Sensor / Calibration tables  (MEDIUM confidence, 266D only)
+        self.sensor_widget = QWidget()
+        senl = QVBoxLayout(self.sensor_widget); senl.setContentsMargins(0,0,0,0)
+        senl.addWidget(QLabel(
+            "Sensor Calibration Tables — 2×16  |  @ 0x1120 / 0x1130  |  266D only (not in 266B)\n"
+            "Two evenly-stepped 16-point lookup tables (delta ~15–16 per step, range 8–227).\n"
+            "Likely O2 sensor gain/linearization or coolant temp correction.\n"
+            "⚠ Purpose inferred — not documented by 034. 266B does not have these.",
+            styleSheet="color:#7a6030; font-size:11px; padding:4px 0;"))
+        senl.addWidget(QLabel("Table A (0x1120):", styleSheet="color:#5a7a90; font-size:10px; padding:2px 0;"))
+        self.sensor_a_table = _OneDTable(16)
+        self.sensor_a_table.value_changed.connect(self._on_edit)
+        senl.addWidget(self.sensor_a_table)
+        senl.addWidget(QLabel("Table B (0x1130):", styleSheet="color:#5a7a90; font-size:10px; padding:2px 0;"))
+        self.sensor_b_table = _OneDTable(16)
+        self.sensor_b_table.value_changed.connect(self._on_edit)
+        senl.addWidget(self.sensor_b_table)
+        senl.addStretch()
+        self.sensor_tab_idx = self.map_tabs.addTab(self.sensor_widget, "Sensor Cal")
 
         # ── ECU detection info strip ──────────────────────────────────────
         info_row = QHBoxLayout()
@@ -554,12 +635,33 @@ class OfflineRomEditor(QWidget):
         CL_LOAD_ADDR = 0x0660
         self.cl_load_table.load_values(list(rom[CL_LOAD_ADDR:CL_LOAD_ADDR+16]))
 
-        # MAF tab visibility
-        self.map_tabs.setTabVisible(self.maf_tab_idx, is_266b)  # AAH has no MAF table
-        if is_266b:
+        # MAF tab — visible for 266B and 266D (same address, same format)
+        self.map_tabs.setTabVisible(self.maf_tab_idx, not is_aah)
+        if not is_aah:
             MAF_ADDR = 0x02D0
             maf_vals = [int.from_bytes(rom[MAF_ADDR+i*2:MAF_ADDR+i*2+2], 'big') for i in range(64)]
             self.maf_table.load_values(maf_vals)
+
+        # Warmup Enrichment (0x06D0) — all 266x ECUs
+        self.map_tabs.setTabVisible(self.warmup_tab_idx, not is_aah)
+        if not is_aah:
+            self.warmup_table.load_values(list(rom[0x06D0:0x06D0+16]))
+
+        # Extra Decel Map (0x0E40) — all ECUs
+        self.decel2a_table.load_values(list(rom[0x0E40:0x0E48]))
+        self.decel2b_table.load_values(list(rom[0x0E48:0x0E50]))
+
+        # Overrun Curves (0x0550-0x0580) — all 266x ECUs
+        self.map_tabs.setTabVisible(self.overrun_tab_idx, not is_aah)
+        if not is_aah:
+            for i, t in enumerate(self.overrun_tables):
+                t.load_values(list(rom[0x0550+i*16:0x0560+i*16]))
+
+        # Sensor Calibration tables (0x1120/0x1130) — 266D only
+        self.map_tabs.setTabVisible(self.sensor_tab_idx, self._ecu_version == "266D")
+        if self._ecu_version == "266D":
+            self.sensor_a_table.load_values(list(rom[0x1120:0x1130]))
+            self.sensor_b_table.load_values(list(rom[0x1130:0x1140]))
 
         # Status
         cs_ok  = verify_checksum(bytes(rom[:32768]), self._ecu_version)
@@ -610,13 +712,41 @@ class OfflineRomEditor(QWidget):
             try: rom[CL_LOAD_ADDR+i] = max(0, min(255, int(v)))
             except Exception: pass
 
-        if is_266b:
+        if not is_aah:
             MAF_ADDR = 0x02D0
             for i, v in enumerate(self.maf_table.get_values()):
                 try:
                     v = max(0, min(65535, int(v)))
                     rom[MAF_ADDR+i*2]   = (v >> 8) & 0xFF
                     rom[MAF_ADDR+i*2+1] = v & 0xFF
+                except Exception: pass
+
+            # Warmup Enrichment
+            for i, v in enumerate(self.warmup_table.get_values()):
+                try: rom[0x06D0+i] = max(0, min(255, int(v)))
+                except Exception: pass
+
+            # Overrun Curves
+            for row, t in enumerate(self.overrun_tables):
+                for i, v in enumerate(t.get_values()):
+                    try: rom[0x0550+row*16+i] = max(0, min(255, int(v)))
+                    except Exception: pass
+
+        # Extra Decel Map (all ECUs)
+        for i, v in enumerate(self.decel2a_table.get_values()):
+            try: rom[0x0E40+i] = max(0, min(255, int(v)))
+            except Exception: pass
+        for i, v in enumerate(self.decel2b_table.get_values()):
+            try: rom[0x0E48+i] = max(0, min(255, int(v)))
+            except Exception: pass
+
+        # Sensor Cal tables (266D only)
+        if self._ecu_version == "266D":
+            for i, v in enumerate(self.sensor_a_table.get_values()):
+                try: rom[0x1120+i] = max(0, min(255, int(v)))
+                except Exception: pass
+            for i, v in enumerate(self.sensor_b_table.get_values()):
+                try: rom[0x1130+i] = max(0, min(255, int(v)))
                 except Exception: pass
 
         fixed = apply_checksum(bytearray(rom[:32768]), self._ecu_version)
