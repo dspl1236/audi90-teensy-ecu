@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QListWidget, QProgressBar,
     QFileDialog, QMessageBox, QSplitter, QFrame,
-    QSizePolicy, QTabWidget
+    QSizePolicy, QTabWidget, QTextEdit
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QColor, QBrush
@@ -544,6 +544,46 @@ class OfflineRomEditor(QWidget):
         senl.addStretch()
         self.sensor_tab_idx = self.map_tabs.addTab(self.sensor_widget, "Sensor Cal")
 
+        # ── HachiROM Compare tab ──────────────────────────────────────────
+        compare_widget = QWidget()
+        compare_lay = QVBoxLayout(compare_widget)
+        compare_lay.setContentsMargins(8, 8, 8, 8)
+        compare_lay.setSpacing(6)
+
+        if HACHIROM_AVAILABLE:
+            cmp_top = QHBoxLayout()
+            self.btn_cmp_load_b  = QPushButton("📂  Load ROM B for Compare…")
+            self.lbl_cmp_b       = QLabel("ROM B: (none)")
+            self.lbl_cmp_b.setStyleSheet("color:#3d5068; font-size:11px;")
+            self.btn_cmp_run     = QPushButton("⊕  Compare  A vs B")
+            self.btn_cmp_run.setEnabled(False)
+            self._cmp_data_b = b""
+            self.btn_cmp_load_b.clicked.connect(self._cmp_load_b)
+            self.btn_cmp_run.clicked.connect(self._run_compare)
+            cmp_top.addWidget(self.btn_cmp_load_b)
+            cmp_top.addWidget(self.lbl_cmp_b, 1)
+            cmp_top.addWidget(self.btn_cmp_run)
+
+            self.cmp_result = QTextEdit()
+            self.cmp_result.setReadOnly(True)
+            self.cmp_result.setFont(QFont("Courier New", 10))
+            self.cmp_result.setStyleSheet(
+                "QTextEdit { background:#060a0f; border:1px solid #1a2332; "
+                "color:#7a9ab0; font-family:'Courier New',monospace; font-size:10px; }")
+            self.cmp_result.setPlaceholderText(
+                "Load the current ROM (ROM A) using Open .bin above, "
+                "then load ROM B here to compare.")
+
+            compare_lay.addLayout(cmp_top)
+            compare_lay.addWidget(self.cmp_result, 1)
+        else:
+            compare_lay.addWidget(QLabel(
+                "HachiROM submodule not found.\n"
+                "Run:  git submodule update --init --recursive",
+                styleSheet="color:#ff6e2d; padding:12px;"))
+
+        self.compare_tab_idx = self.map_tabs.addTab(compare_widget, "⊕ Compare")
+
         # ── ECU detection info strip ──────────────────────────────────────
         info_row = QHBoxLayout()
         info_row.setContentsMargins(0, 2, 0, 2)
@@ -972,6 +1012,82 @@ class OfflineRomEditor(QWidget):
         else:
             self.wgt_map_addrs.setPlainText("No map table for this ECU version.")
 
+    # ── HachiROM Compare ─────────────────────────────────────────────────────
+
+    def _cmp_load_b(self):
+        """Load ROM B from disk for comparison against the currently loaded ROM A."""
+        if not HACHIROM_AVAILABLE:
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Open ROM B", "",
+            "ROM Files (*.bin *.034);;All Files (*)")
+        if not path:
+            return
+        try:
+            data = hr_load_bin(path)
+            # Auto-unscramble .034
+            if path.lower().endswith(".034"):
+                data = hr_unscramble(data)
+            self._cmp_data_b = data
+            result_b = hr_detect(data)
+            name = os.path.basename(path)
+            variant_b = result_b.variant.name if result_b.variant else "Unknown"
+            self.lbl_cmp_b.setText(
+                f"ROM B: {name}  [{variant_b}  CRC32={result_b.crc32:#010x}]")
+            self.lbl_cmp_b.setStyleSheet("color:#2dff6e; font-size:11px;")
+            self.btn_cmp_run.setEnabled(hasattr(self, "_romdata") and len(self._romdata) > 0)
+            self.cmp_result.setPlainText(f"ROM B loaded: {name}\nClick 'Compare A vs B' to run diff.")
+        except Exception as e:
+            QMessageBox.critical(self, "Load Error", str(e))
+
+    def _run_compare(self):
+        """Byte-by-byte diff of ROM A (currently loaded) vs ROM B, tagged by map region."""
+        if not HACHIROM_AVAILABLE or not self._cmp_data_b:
+            return
+        if not hasattr(self, "_romdata") or not self._romdata:
+            QMessageBox.warning(self, "No ROM A", "Load a ROM first (File → Open .bin).")
+            return
+
+        from hachirom.bridge import get_variant
+        try:
+            variant = get_variant(self._ecu_version)
+        except Exception:
+            variant = None
+
+        data_a = bytes(self._romdata[:32768])
+        data_b = bytes(self._cmp_data_b[:32768])
+
+        diffs = hr_compare(data_a, data_b, variant)
+        summary = hr_diff_summary(diffs)
+
+        lines = []
+        lines.append(f"ROM COMPARE  —  {len(diffs)} byte(s) differ  ({len(data_a)} bytes compared)")
+        lines.append("")
+
+        # Summary by region
+        if summary:
+            lines.append("CHANGED BYTES BY MAP REGION")
+            lines.append("-" * 48)
+            for region, count in sorted(summary.items(), key=lambda x: -x[1]):
+                bar = "█" * min(count, 32)
+                lines.append(f"  {region:<36} {count:>4}  {bar}")
+            lines.append("")
+
+        # Byte-level detail (first 200 diffs to keep it readable)
+        MAX_SHOW = 200
+        lines.append(f"BYTE-LEVEL DETAIL  (showing first {min(len(diffs), MAX_SHOW)} of {len(diffs)})")
+        lines.append(f"  {'ADDR':>6}  {'A':>3}  {'B':>3}  {'Δ':>4}  MAP REGION")
+        lines.append("-" * 64)
+        for d in diffs[:MAX_SHOW]:
+            delta = d.b - d.a
+            region = d.map_name or "—"
+            lines.append(
+                f"  0x{d.address:04X}  {d.a:>3}  {d.b:>3}  {delta:>+4}  {region}")
+        if len(diffs) > MAX_SHOW:
+            lines.append(f"  ... and {len(diffs) - MAX_SHOW} more bytes not shown")
+
+        self.cmp_result.setPlainText("\n".join(lines))
+
     def _on_edit(self, *_):
         if not self._dirty:
             self._dirty = True
@@ -1364,3 +1480,4 @@ class RomManagerTab(QWidget):
             self._teensy.corrections_off()
             self.lbl_corr.setText("Status: DISABLED")
             self.lbl_corr.setStyleSheet("color:#ff9900;")
+
