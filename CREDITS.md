@@ -81,6 +81,15 @@ collective knowledge is too distributed — but it is appreciated.
 
 ---
 
+## Development
+
+This project was developed by **dspl1236** in collaboration with
+**Claude** (Anthropic) — firmware architecture, ROM analysis, CI pipeline,
+tuner application, and the companion HachiROM library were all built across
+a series of sessions using Claude as a development partner.
+
+---
+
 ## Project Context
 
 Built for a **1990 Audi 90 with a stroked 2.6 L 7A 20v engine**
