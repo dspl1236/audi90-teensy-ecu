@@ -12,3 +12,11 @@ __pycache__/
 build/
 dist/
 *.spec
+
+# KiCad
+pcb/*.kicad_prl
+pcb/*-backups/
+pcb/_autosave-*
+pcb/*.bak
+pcb/fp-info-cache
+pcb/gerbers/
