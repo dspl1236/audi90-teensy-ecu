@@ -1,189 +1,210 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 680 720">
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1200 1240">
 <style>
-  text { font-family: sans-serif; }
-  .th { font-size: 14px; font-weight: 500; fill: #3d3d3a; }
-  .ts { font-size: 12px; fill: #73726c; }
-  .box-teal { fill: #E1F5EE; stroke: #0F6E56; }
-  .box-blue { fill: #E6F1FB; stroke: #185FA5; }
-  .box-purple { fill: #EEEDFE; stroke: #534AB7; }
-  .box-green { fill: #EAF3DE; stroke: #3B6D11; }
-  .box-coral { fill: #FAECE7; stroke: #993C1D; }
-  .box-amber { fill: #FAEEDA; stroke: #854F0B; }
-  .box-gray { fill: #F1EFE8; stroke: #5F5E5A; }
-  .t-teal { fill: #085041; } .ts-teal { fill: #0F6E56; }
-  .t-blue { fill: #0C447C; } .ts-blue { fill: #185FA5; }
-  .t-purple { fill: #3C3489; } .ts-purple { fill: #534AB7; }
-  .t-green { fill: #27500A; }
-  .t-coral { fill: #712B13; }
-  .t-amber { fill: #633806; } .ts-amber { fill: #854F0B; }
-  .t-gray { fill: #444441; }
+  .pin { font: 10px monospace; fill: #73726c; }
+  .pn { font: 9px monospace; fill: #a09e96; }
+  .lbl { font: 12px sans-serif; font-weight: 500; fill: #3d3d3a; }
+  .comp { font: 14px sans-serif; font-weight: 500; fill: #3d3d3a; }
+  .note { font: 10px sans-serif; fill: #73726c; }
+  .wire { stroke: #3d3d3a; stroke-width: 0.7; fill: none; }
+  .bus-a { stroke: #378ADD; stroke-width: 0.7; fill: none; }
+  .bus-d { stroke: #639922; stroke-width: 0.7; fill: none; }
+  .pwr { stroke: #BA7517; stroke-width: 1; fill: none; }
+  .pwr33 { stroke: #1D9E75; stroke-width: 1; fill: none; }
+  .gnd-w { stroke: #888780; stroke-width: 0.8; fill: none; }
+  .ctrl { stroke: #D85A30; stroke-width: 0.8; fill: none; }
+  .ic { fill: #f5f4ef; stroke: #3d3d3a; stroke-width: 1; }
+  .res { fill: none; stroke: #3d3d3a; stroke-width: 0.8; }
+  .cap { stroke: #3d3d3a; stroke-width: 0.8; }
+  .junc { fill: #3d3d3a; }
 </style>
 
-<!-- Title -->
-<text class="th" x="340" y="24" text-anchor="middle">TeensyEprom wiring schematic</text>
-<text class="ts" x="340" y="42" text-anchor="middle">Teensy 4.1 EPROM emulator — 27C256 / 27C512 replacement</text>
+<text class="comp" x="600" y="22" text-anchor="middle" style="font-size:16px">TeensyEprom — wiring schematic</text>
+<text class="note" x="600" y="38" text-anchor="middle">Teensy 4.1 drop-in 27C256/27C512 EPROM emulator</text>
 
-<!-- DIP-28 SOCKET -->
-<rect class="box-teal" x="30" y="62" width="130" height="540" rx="8" stroke-width="0.5"/>
-<text class="t-teal" x="95" y="86" text-anchor="middle" font-size="14" font-weight="500">DIP-28 socket</text>
-<text class="ts-teal" x="95" y="102" text-anchor="middle">27C256 / 27C512</text>
+<!-- J1: DIP-28 -->
+<rect class="ic" x="50" y="70" width="140" height="600" rx="3"/>
+<path d="M108 70 A12 12 0 0 1 132 70" fill="#f5f4ef" stroke="#3d3d3a" stroke-width="1"/>
+<text class="comp" x="120" y="100" text-anchor="middle">27C512</text>
+<text class="note" x="120" y="116" text-anchor="middle">J1 — DIP-28</text>
 
-<text class="ts" x="48" y="132" dominant-baseline="central">1  Vpp/A15</text>
-<text class="ts" x="48" y="152" dominant-baseline="central">2  A12</text>
-<text class="ts" x="48" y="172" dominant-baseline="central">3  A7</text>
-<text class="ts" x="48" y="192" dominant-baseline="central">4  A6</text>
-<text class="ts" x="48" y="212" dominant-baseline="central">5  A5</text>
-<text class="ts" x="48" y="232" dominant-baseline="central">6  A4</text>
-<text class="ts" x="48" y="252" dominant-baseline="central">7  A3</text>
-<text class="ts" x="48" y="272" dominant-baseline="central">8  A2</text>
-<text class="ts" x="48" y="292" dominant-baseline="central">9  A1</text>
-<text class="ts" x="48" y="312" dominant-baseline="central">10 A0</text>
-<text class="ts" x="48" y="332" dominant-baseline="central">11 D0</text>
-<text class="ts" x="48" y="352" dominant-baseline="central">12 D1</text>
-<text class="ts" x="48" y="372" dominant-baseline="central">13 D2</text>
-<text class="ts" x="48" y="392" dominant-baseline="central">14 GND</text>
-<text class="ts" x="48" y="418" dominant-baseline="central">28 Vcc (5V)</text>
-<text class="ts" x="48" y="438" dominant-baseline="central">27 A14</text>
-<text class="ts" x="48" y="458" dominant-baseline="central">26 A13</text>
-<text class="ts" x="48" y="478" dominant-baseline="central">25 A8</text>
-<text class="ts" x="48" y="498" dominant-baseline="central">24 A9</text>
-<text class="ts" x="48" y="518" dominant-baseline="central">23 A11</text>
-<text class="ts" x="48" y="538" dominant-baseline="central">22 /OE</text>
-<text class="ts" x="48" y="558" dominant-baseline="central">21 A10</text>
-<text class="ts" x="48" y="578" dominant-baseline="central">20 /CE</text>
-<text class="ts" x="48" y="592" dominant-baseline="central">19 D7  18 D6</text>
+<line x1="24" y1="150" x2="50" y2="150" class="wire"/><text class="pin" x="56" y="153">Vpp/A15</text><text class="pn" x="20" y="153" text-anchor="end">1</text>
+<line x1="24" y1="185" x2="50" y2="185" class="wire"/><text class="pin" x="56" y="188">A12</text><text class="pn" x="20" y="188" text-anchor="end">2</text>
+<line x1="24" y1="220" x2="50" y2="220" class="wire"/><text class="pin" x="56" y="223">A7</text><text class="pn" x="20" y="223" text-anchor="end">3</text>
+<line x1="24" y1="255" x2="50" y2="255" class="wire"/><text class="pin" x="56" y="258">A6</text><text class="pn" x="20" y="258" text-anchor="end">4</text>
+<line x1="24" y1="290" x2="50" y2="290" class="wire"/><text class="pin" x="56" y="293">A5</text><text class="pn" x="20" y="293" text-anchor="end">5</text>
+<line x1="24" y1="325" x2="50" y2="325" class="wire"/><text class="pin" x="56" y="328">A4</text><text class="pn" x="20" y="328" text-anchor="end">6</text>
+<line x1="24" y1="360" x2="50" y2="360" class="wire"/><text class="pin" x="56" y="363">A3</text><text class="pn" x="20" y="363" text-anchor="end">7</text>
+<line x1="24" y1="395" x2="50" y2="395" class="wire"/><text class="pin" x="56" y="398">A2</text><text class="pn" x="20" y="398" text-anchor="end">8</text>
+<line x1="24" y1="430" x2="50" y2="430" class="wire"/><text class="pin" x="56" y="433">A1</text><text class="pn" x="20" y="433" text-anchor="end">9</text>
+<line x1="24" y1="465" x2="50" y2="465" class="wire"/><text class="pin" x="56" y="468">A0</text><text class="pn" x="20" y="468" text-anchor="end">10</text>
+<line x1="24" y1="500" x2="50" y2="500" class="wire"/><text class="pin" x="56" y="503">D0</text><text class="pn" x="20" y="503" text-anchor="end">11</text>
+<line x1="24" y1="535" x2="50" y2="535" class="wire"/><text class="pin" x="56" y="538">D1</text><text class="pn" x="20" y="538" text-anchor="end">12</text>
+<line x1="24" y1="570" x2="50" y2="570" class="wire"/><text class="pin" x="56" y="573">D2</text><text class="pn" x="20" y="573" text-anchor="end">13</text>
+<line x1="24" y1="605" x2="50" y2="605" class="wire"/><text class="pin" x="56" y="608">GND</text><text class="pn" x="20" y="608" text-anchor="end">14</text>
+<line x1="190" y1="150" x2="216" y2="150" class="wire"/><text class="pin" x="184" y="153" text-anchor="end">Vcc</text><text class="pn" x="220" y="153">28</text>
+<line x1="190" y1="185" x2="216" y2="185" class="wire"/><text class="pin" x="184" y="188" text-anchor="end">A14</text><text class="pn" x="220" y="188">27</text>
+<line x1="190" y1="220" x2="216" y2="220" class="wire"/><text class="pin" x="184" y="223" text-anchor="end">A13</text><text class="pn" x="220" y="223">26</text>
+<line x1="190" y1="255" x2="216" y2="255" class="wire"/><text class="pin" x="184" y="258" text-anchor="end">A8</text><text class="pn" x="220" y="258">25</text>
+<line x1="190" y1="290" x2="216" y2="290" class="wire"/><text class="pin" x="184" y="293" text-anchor="end">A9</text><text class="pn" x="220" y="293">24</text>
+<line x1="190" y1="325" x2="216" y2="325" class="wire"/><text class="pin" x="184" y="328" text-anchor="end">A11</text><text class="pn" x="220" y="328">23</text>
+<line x1="190" y1="360" x2="216" y2="360" class="wire"/><text class="pin" x="184" y="363" text-anchor="end">/OE</text><text class="pn" x="220" y="363">22</text>
+<line x1="190" y1="395" x2="216" y2="395" class="wire"/><text class="pin" x="184" y="398" text-anchor="end">A10</text><text class="pn" x="220" y="398">21</text>
+<line x1="190" y1="430" x2="216" y2="430" class="wire"/><text class="pin" x="184" y="433" text-anchor="end">/CE</text><text class="pn" x="220" y="433">20</text>
+<line x1="190" y1="465" x2="216" y2="465" class="wire"/><text class="pin" x="184" y="468" text-anchor="end">D7</text><text class="pn" x="220" y="468">19</text>
+<line x1="190" y1="500" x2="216" y2="500" class="wire"/><text class="pin" x="184" y="503" text-anchor="end">D6</text><text class="pn" x="220" y="503">18</text>
+<line x1="190" y1="535" x2="216" y2="535" class="wire"/><text class="pin" x="184" y="538" text-anchor="end">D5</text><text class="pn" x="220" y="538">17</text>
+<line x1="190" y1="570" x2="216" y2="570" class="wire"/><text class="pin" x="184" y="573" text-anchor="end">D4</text><text class="pn" x="220" y="573">16</text>
+<line x1="190" y1="605" x2="216" y2="605" class="wire"/><text class="pin" x="184" y="608" text-anchor="end">D3</text><text class="pn" x="220" y="608">15</text>
 
-<!-- U1: 74HCT245 Addr Low -->
-<rect class="box-blue" x="220" y="120" width="140" height="210" rx="8" stroke-width="0.5"/>
-<text class="t-blue" x="290" y="146" text-anchor="middle" font-size="14" font-weight="500">U1: 74HCT245</text>
-<text class="ts-blue" x="290" y="164" text-anchor="middle">Addr low A0–A7</text>
-<text class="ts" x="236" y="192" dominant-baseline="central">A0 → B0</text>
-<text class="ts" x="236" y="210" dominant-baseline="central">A1 → B1</text>
-<text class="ts" x="236" y="228" dominant-baseline="central">A2 → B2</text>
-<text class="ts" x="236" y="246" dominant-baseline="central">A3 → B3</text>
-<text class="ts" x="236" y="264" dominant-baseline="central">A4 → B4</text>
-<text class="ts" x="236" y="282" dominant-baseline="central">A5 → B5</text>
-<text class="ts" x="236" y="300" dominant-baseline="central">A6 → B6</text>
-<text class="ts" x="236" y="318" dominant-baseline="central">A7 → B7</text>
+<!-- U1: 74HCT245 DIP-20 -->
+<rect class="ic" x="480" y="130" width="140" height="410" rx="3"/>
+<path d="M538 130 A12 12 0 0 1 562 130" fill="#f5f4ef" stroke="#3d3d3a" stroke-width="1"/>
+<text class="comp" x="550" y="158" text-anchor="middle">74HCT245</text>
+<text class="note" x="550" y="174" text-anchor="middle">U1 — addr low (DIP-20)</text>
+<line x1="454" y1="200" x2="480" y2="200" class="gnd-w"/><text class="pin" x="486" y="203">DIR</text><text class="pn" x="450" y="203" text-anchor="end">1 →GND</text>
+<line x1="454" y1="226" x2="480" y2="226" class="bus-a"/><text class="pin" x="486" y="229">A1</text><text class="pn" x="450" y="229" text-anchor="end">2</text>
+<line x1="454" y1="252" x2="480" y2="252" class="bus-a"/><text class="pin" x="486" y="255">A2</text><text class="pn" x="450" y="255" text-anchor="end">3</text>
+<line x1="454" y1="278" x2="480" y2="278" class="bus-a"/><text class="pin" x="486" y="281">A3</text><text class="pn" x="450" y="281" text-anchor="end">4</text>
+<line x1="454" y1="304" x2="480" y2="304" class="bus-a"/><text class="pin" x="486" y="307">A4</text><text class="pn" x="450" y="307" text-anchor="end">5</text>
+<line x1="454" y1="330" x2="480" y2="330" class="bus-a"/><text class="pin" x="486" y="333">A5</text><text class="pn" x="450" y="333" text-anchor="end">6</text>
+<line x1="454" y1="356" x2="480" y2="356" class="bus-a"/><text class="pin" x="486" y="359">A6</text><text class="pn" x="450" y="359" text-anchor="end">7</text>
+<line x1="454" y1="382" x2="480" y2="382" class="bus-a"/><text class="pin" x="486" y="385">A7</text><text class="pn" x="450" y="385" text-anchor="end">8</text>
+<line x1="454" y1="408" x2="480" y2="408" class="bus-a"/><text class="pin" x="486" y="411">A8</text><text class="pn" x="450" y="411" text-anchor="end">9</text>
+<line x1="454" y1="434" x2="480" y2="434" class="gnd-w"/><text class="pin" x="486" y="437">GND</text><text class="pn" x="450" y="437" text-anchor="end">10 ⏚</text>
+<line x1="620" y1="200" x2="646" y2="200" class="pwr33"/><text class="pin" x="614" y="203" text-anchor="end">Vcc</text><text class="pn" x="650" y="203" style="fill:#1D9E75; font-weight:bold">20 ← 3.3V</text>
+<line x1="620" y1="226" x2="646" y2="226" class="gnd-w"/><text class="pin" x="614" y="229" text-anchor="end">/OE</text><text class="pn" x="650" y="229">19 →GND</text>
+<line x1="620" y1="252" x2="646" y2="252" class="bus-a"/><text class="pin" x="614" y="255" text-anchor="end">B1</text><text class="pn" x="650" y="255">18 → T2</text>
+<line x1="620" y1="278" x2="646" y2="278" class="bus-a"/><text class="pin" x="614" y="281" text-anchor="end">B2</text><text class="pn" x="650" y="281">17 → T3</text>
+<line x1="620" y1="304" x2="646" y2="304" class="bus-a"/><text class="pin" x="614" y="307" text-anchor="end">B3</text><text class="pn" x="650" y="307">16 → T4</text>
+<line x1="620" y1="330" x2="646" y2="330" class="bus-a"/><text class="pin" x="614" y="333" text-anchor="end">B4</text><text class="pn" x="650" y="333">15 → T5</text>
+<line x1="620" y1="356" x2="646" y2="356" class="bus-a"/><text class="pin" x="614" y="359" text-anchor="end">B5</text><text class="pn" x="650" y="359">14 → T6</text>
+<line x1="620" y1="382" x2="646" y2="382" class="bus-a"/><text class="pin" x="614" y="385" text-anchor="end">B6</text><text class="pn" x="650" y="385">13 → T7</text>
+<line x1="620" y1="408" x2="646" y2="408" class="bus-a"/><text class="pin" x="614" y="411" text-anchor="end">B7</text><text class="pn" x="650" y="411">12 → T8</text>
+<line x1="620" y1="434" x2="646" y2="434" class="bus-a"/><text class="pin" x="614" y="437" text-anchor="end">B8</text><text class="pn" x="650" y="437">11 → T9</text>
+<line x1="550" y1="545" x2="550" y2="554" class="cap" fill="none"/><line x1="540" y1="554" x2="560" y2="554" class="cap" fill="none"/><line x1="540" y1="558" x2="560" y2="558" class="cap" fill="none"/><line x1="550" y1="558" x2="550" y2="567" class="cap" fill="none"/><text class="note" x="570" y="560">C1 0.1µF (pin 20–10)</text>
 
-<!-- U2: 74HCT245 Addr High -->
-<rect class="box-blue" x="220" y="360" width="140" height="210" rx="8" stroke-width="0.5"/>
-<text class="t-blue" x="290" y="386" text-anchor="middle" font-size="14" font-weight="500">U2: 74HCT245</text>
-<text class="ts-blue" x="290" y="404" text-anchor="middle">Addr high A8–A15</text>
-<text class="ts" x="236" y="428" dominant-baseline="central">A8 → B8</text>
-<text class="ts" x="236" y="446" dominant-baseline="central">A9 → B9</text>
-<text class="ts" x="236" y="464" dominant-baseline="central">A10 → B10</text>
-<text class="ts" x="236" y="482" dominant-baseline="central">A11 → B11</text>
-<text class="ts" x="236" y="500" dominant-baseline="central">A12 → B12</text>
-<text class="ts" x="236" y="518" dominant-baseline="central">A13 → B13</text>
-<text class="ts" x="236" y="536" dominant-baseline="central">A14 → B14</text>
-<text class="ts" x="236" y="554" dominant-baseline="central">A15 → B15</text>
+<!-- U2: 74HCT245 DIP-20 -->
+<rect class="ic" x="480" y="600" width="140" height="410" rx="3"/>
+<path d="M538 600 A12 12 0 0 1 562 600" fill="#f5f4ef" stroke="#3d3d3a" stroke-width="1"/>
+<text class="comp" x="550" y="628" text-anchor="middle">74HCT245</text>
+<text class="note" x="550" y="644" text-anchor="middle">U2 — addr high (DIP-20)</text>
+<line x1="454" y1="670" x2="480" y2="670" class="gnd-w"/><text class="pin" x="486" y="673">DIR</text><text class="pn" x="450" y="673" text-anchor="end">1 →GND</text>
+<line x1="454" y1="696" x2="480" y2="696" class="bus-a"/><text class="pin" x="486" y="699">A1</text><text class="pn" x="450" y="699" text-anchor="end">2</text>
+<line x1="454" y1="722" x2="480" y2="722" class="bus-a"/><text class="pin" x="486" y="725">A2</text><text class="pn" x="450" y="725" text-anchor="end">3</text>
+<line x1="454" y1="748" x2="480" y2="748" class="bus-a"/><text class="pin" x="486" y="751">A3</text><text class="pn" x="450" y="751" text-anchor="end">4</text>
+<line x1="454" y1="774" x2="480" y2="774" class="bus-a"/><text class="pin" x="486" y="777">A4</text><text class="pn" x="450" y="777" text-anchor="end">5</text>
+<line x1="454" y1="800" x2="480" y2="800" class="bus-a"/><text class="pin" x="486" y="803">A5</text><text class="pn" x="450" y="803" text-anchor="end">6</text>
+<line x1="454" y1="826" x2="480" y2="826" class="bus-a"/><text class="pin" x="486" y="829">A6</text><text class="pn" x="450" y="829" text-anchor="end">7</text>
+<line x1="454" y1="852" x2="480" y2="852" class="bus-a"/><text class="pin" x="486" y="855">A7</text><text class="pn" x="450" y="855" text-anchor="end">8</text>
+<line x1="454" y1="878" x2="480" y2="878" class="bus-a"/><text class="pin" x="486" y="881">A8</text><text class="pn" x="450" y="881" text-anchor="end">9</text>
+<line x1="454" y1="904" x2="480" y2="904" class="gnd-w"/><text class="pin" x="486" y="907">GND</text><text class="pn" x="450" y="907" text-anchor="end">10 ⏚</text>
+<line x1="620" y1="670" x2="646" y2="670" class="pwr33"/><text class="pin" x="614" y="673" text-anchor="end">Vcc</text><text class="pn" x="650" y="673" style="fill:#1D9E75; font-weight:bold">20 ← 3.3V</text>
+<line x1="620" y1="696" x2="646" y2="696" class="gnd-w"/><text class="pin" x="614" y="699" text-anchor="end">/OE</text><text class="pn" x="650" y="699">19 →GND</text>
+<line x1="620" y1="722" x2="646" y2="722" class="bus-a"/><text class="pin" x="614" y="725" text-anchor="end">B1</text><text class="pn" x="650" y="725">18 → T10</text>
+<line x1="620" y1="748" x2="646" y2="748" class="bus-a"/><text class="pin" x="614" y="751" text-anchor="end">B2</text><text class="pn" x="650" y="751">17 → T11</text>
+<line x1="620" y1="774" x2="646" y2="774" class="bus-a"/><text class="pin" x="614" y="777" text-anchor="end">B3</text><text class="pn" x="650" y="777">16 → T12</text>
+<line x1="620" y1="800" x2="646" y2="800" class="bus-a"/><text class="pin" x="614" y="803" text-anchor="end">B4</text><text class="pn" x="650" y="803">15 → T24</text>
+<line x1="620" y1="826" x2="646" y2="826" class="bus-a"/><text class="pin" x="614" y="829" text-anchor="end">B5</text><text class="pn" x="650" y="829">14 → T25</text>
+<line x1="620" y1="852" x2="646" y2="852" class="bus-a"/><text class="pin" x="614" y="855" text-anchor="end">B6</text><text class="pn" x="650" y="855">13 → T26</text>
+<line x1="620" y1="878" x2="646" y2="878" class="bus-a"/><text class="pin" x="614" y="881" text-anchor="end">B7</text><text class="pn" x="650" y="881">12 → T27</text>
+<line x1="620" y1="904" x2="646" y2="904" class="bus-a"/><text class="pin" x="614" y="907" text-anchor="end">B8</text><text class="pn" x="650" y="907">11 → T28</text>
+<line x1="550" y1="1015" x2="550" y2="1024" class="cap" fill="none"/><line x1="540" y1="1024" x2="560" y2="1024" class="cap" fill="none"/><line x1="540" y1="1028" x2="560" y2="1028" class="cap" fill="none"/><line x1="550" y1="1028" x2="550" y2="1037" class="cap" fill="none"/><text class="note" x="570" y="1030">C2 0.1µF (pin 20–10)</text>
 
 <!-- TEENSY 4.1 -->
-<rect class="box-purple" x="440" y="62" width="210" height="600" rx="8" stroke-width="0.5"/>
-<text class="t-purple" x="545" y="86" text-anchor="middle" font-size="14" font-weight="500">Teensy 4.1</text>
-<text class="ts-purple" x="545" y="102" text-anchor="middle">600 MHz, 3.3V GPIO</text>
+<rect class="ic" x="830" y="70" width="160" height="960" rx="3"/>
+<path d="M898 70 A12 12 0 0 1 922 70" fill="#f5f4ef" stroke="#3d3d3a" stroke-width="1"/>
+<text class="comp" x="910" y="100" text-anchor="middle">Teensy 4.1</text>
+<text class="note" x="910" y="116" text-anchor="middle">IMXRT1062, 600 MHz</text>
+<line x1="804" y1="150" x2="830" y2="150" class="gnd-w"/><text class="pin" x="836" y="153">GND</text>
+<line x1="804" y1="252" x2="830" y2="252" class="bus-a"/><text class="pin" x="836" y="255">2  ← A0</text>
+<line x1="804" y1="278" x2="830" y2="278" class="bus-a"/><text class="pin" x="836" y="281">3  ← A1</text>
+<line x1="804" y1="304" x2="830" y2="304" class="bus-a"/><text class="pin" x="836" y="307">4  ← A2</text>
+<line x1="804" y1="330" x2="830" y2="330" class="bus-a"/><text class="pin" x="836" y="333">5  ← A3</text>
+<line x1="804" y1="356" x2="830" y2="356" class="bus-a"/><text class="pin" x="836" y="359">6  ← A4</text>
+<line x1="804" y1="382" x2="830" y2="382" class="bus-a"/><text class="pin" x="836" y="385">7  ← A5</text>
+<line x1="804" y1="408" x2="830" y2="408" class="bus-a"/><text class="pin" x="836" y="411">8  ← A6</text>
+<line x1="804" y1="434" x2="830" y2="434" class="bus-a"/><text class="pin" x="836" y="437">9  ← A7</text>
+<line x1="804" y1="480" x2="830" y2="480" class="bus-a"/><text class="pin" x="836" y="483">10 ← A8</text>
+<line x1="804" y1="506" x2="830" y2="506" class="bus-a"/><text class="pin" x="836" y="509">11 ← A9</text>
+<line x1="804" y1="532" x2="830" y2="532" class="bus-a"/><text class="pin" x="836" y="535">12 ← A10</text>
+<line x1="804" y1="558" x2="830" y2="558" class="wire"/><text class="pin" x="836" y="561">13 LED</text>
+<line x1="804" y1="722" x2="830" y2="722" class="bus-a"/><text class="pin" x="836" y="725">24 ← A11</text>
+<line x1="804" y1="748" x2="830" y2="748" class="bus-a"/><text class="pin" x="836" y="751">25 ← A12</text>
+<line x1="804" y1="774" x2="830" y2="774" class="bus-a"/><text class="pin" x="836" y="777">26 ← A13</text>
+<line x1="804" y1="800" x2="830" y2="800" class="bus-a"/><text class="pin" x="836" y="803">27 ← A14</text>
+<line x1="804" y1="826" x2="830" y2="826" class="bus-a"/><text class="pin" x="836" y="829">28 ← A15</text>
+<line x1="804" y1="880" x2="830" y2="880" class="ctrl"/><text class="pin" x="836" y="883">29 ← /OE</text>
+<line x1="804" y1="910" x2="830" y2="910" class="ctrl"/><text class="pin" x="836" y="913">30 ← /CE</text>
+<line x1="804" y1="950" x2="830" y2="950" class="wire"/><text class="pin" x="836" y="953">31  BTN</text>
+<line x1="804" y1="980" x2="830" y2="980" class="gnd-w"/><text class="pin" x="836" y="983">GND</text>
+<line x1="990" y1="150" x2="1016" y2="150" class="pwr"/><text class="pin" x="984" y="153" text-anchor="end">Vin</text><text class="pin" x="1020" y="153">5V in</text>
+<line x1="990" y1="180" x2="1016" y2="180" class="pwr33"/><text class="pin" x="984" y="183" text-anchor="end">3.3V</text><text class="pin" x="1020" y="183">out</text>
+<line x1="990" y1="600" x2="1016" y2="600" class="bus-d"/><text class="pin" x="984" y="603" text-anchor="end">14 D0</text>
+<line x1="990" y1="630" x2="1016" y2="630" class="bus-d"/><text class="pin" x="984" y="633" text-anchor="end">15 D1</text>
+<line x1="990" y1="660" x2="1016" y2="660" class="bus-d"/><text class="pin" x="984" y="663" text-anchor="end">16 D2</text>
+<line x1="990" y1="690" x2="1016" y2="690" class="bus-d"/><text class="pin" x="984" y="693" text-anchor="end">17 D3</text>
+<line x1="990" y1="720" x2="1016" y2="720" class="bus-d"/><text class="pin" x="984" y="723" text-anchor="end">18 D4</text>
+<line x1="990" y1="750" x2="1016" y2="750" class="bus-d"/><text class="pin" x="984" y="753" text-anchor="end">19 D5</text>
+<line x1="990" y1="780" x2="1016" y2="780" class="bus-d"/><text class="pin" x="984" y="783" text-anchor="end">20 D6</text>
+<line x1="990" y1="810" x2="1016" y2="810" class="bus-d"/><text class="pin" x="984" y="813" text-anchor="end">21 D7</text>
 
-<text class="ts" x="460" y="192" dominant-baseline="central">pin 2  (A0)</text>
-<text class="ts" x="460" y="210" dominant-baseline="central">pin 3  (A1)</text>
-<text class="ts" x="460" y="228" dominant-baseline="central">pin 4  (A2)</text>
-<text class="ts" x="460" y="246" dominant-baseline="central">pin 5  (A3)</text>
-<text class="ts" x="460" y="264" dominant-baseline="central">pin 6  (A4)</text>
-<text class="ts" x="460" y="282" dominant-baseline="central">pin 7  (A5)</text>
-<text class="ts" x="460" y="300" dominant-baseline="central">pin 8  (A6)</text>
-<text class="ts" x="460" y="318" dominant-baseline="central">pin 9  (A7)</text>
-<text class="ts" x="460" y="428" dominant-baseline="central">pin 10 (A8)</text>
-<text class="ts" x="460" y="446" dominant-baseline="central">pin 11 (A9)</text>
-<text class="ts" x="460" y="464" dominant-baseline="central">pin 12 (A10)</text>
-<text class="ts" x="460" y="482" dominant-baseline="central">pin 24 (A11)</text>
-<text class="ts" x="460" y="500" dominant-baseline="central">pin 25 (A12)</text>
-<text class="ts" x="460" y="518" dominant-baseline="central">pin 26 (A13)</text>
-<text class="ts" x="460" y="536" dominant-baseline="central">pin 27 (A14)</text>
-<text class="ts" x="460" y="554" dominant-baseline="central">pin 28 (A15)</text>
+<!-- U1 B → Teensy -->
+<path d="M646 252 L804 252" class="bus-a"/><path d="M646 278 L804 278" class="bus-a"/><path d="M646 304 L804 304" class="bus-a"/><path d="M646 330 L804 330" class="bus-a"/><path d="M646 356 L804 356" class="bus-a"/><path d="M646 382 L804 382" class="bus-a"/><path d="M646 408 L804 408" class="bus-a"/><path d="M646 434 L804 434" class="bus-a"/>
 
-<!-- Wires: DIP → U1 -->
-<line x1="160" y1="312" x2="220" y2="192" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="292" x2="220" y2="210" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="272" x2="220" y2="228" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="252" x2="220" y2="246" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="232" x2="220" y2="264" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="212" x2="220" y2="282" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="192" x2="220" y2="300" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="172" x2="220" y2="318" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
+<!-- U2 B → Teensy -->
+<path d="M646 722 L740 722 L740 480 L804 480" class="bus-a"/><path d="M646 748 L750 748 L750 506 L804 506" class="bus-a"/><path d="M646 774 L760 774 L760 532 L804 532" class="bus-a"/><path d="M646 800 L770 800 L770 722 L804 722" class="bus-a"/><path d="M646 826 L780 826 L780 748 L804 748" class="bus-a"/><path d="M646 852 L790 852 L790 774 L804 774" class="bus-a"/><path d="M646 878 L796 878 L796 800 L804 800" class="bus-a"/><path d="M646 904 L800 904 L800 826 L804 826" class="bus-a"/>
 
-<!-- Wires: U1 → Teensy -->
-<line x1="360" y1="192" x2="440" y2="192" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="210" x2="440" y2="210" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="228" x2="440" y2="228" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="246" x2="440" y2="246" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="264" x2="440" y2="264" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="282" x2="440" y2="282" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="300" x2="440" y2="300" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="318" x2="440" y2="318" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
+<!-- DIP → U1 -->
+<path d="M24 465 L8 465 L8 540 L260 540 L260 226 L454 226" class="bus-a"/><path d="M24 430 L12 430 L12 544 L276 544 L276 252 L454 252" class="bus-a"/><path d="M24 395 L8 395 L8 278 L454 278" class="bus-a"/><path d="M24 360 L12 360 L12 304 L454 304" class="bus-a"/><path d="M24 325 L8 325 L8 330 L454 330" class="bus-a"/><path d="M24 290 L4 290 L4 356 L454 356" class="bus-a"/><path d="M24 255 L8 255 L8 382 L454 382" class="bus-a"/><path d="M24 220 L4 220 L4 408 L454 408" class="bus-a"/>
 
-<!-- Wires: DIP → U2 -->
-<line x1="160" y1="478" x2="220" y2="428" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="498" x2="220" y2="446" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="558" x2="220" y2="464" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="518" x2="220" y2="482" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="152" x2="220" y2="500" stroke="#5DCAA5" stroke-width="0.8" opacity="0.5"/>
-<line x1="160" y1="458" x2="220" y2="518" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="438" x2="220" y2="536" stroke="#5DCAA5" stroke-width="0.8" opacity="0.7"/>
-<line x1="160" y1="132" x2="220" y2="554" stroke="#5DCAA5" stroke-width="0.8" opacity="0.5"/>
+<!-- DIP → U2 -->
+<path d="M216 255 L260 255 L260 696 L454 696" class="bus-a"/><path d="M216 290 L276 290 L276 722 L454 722" class="bus-a"/><path d="M216 395 L308 395 L308 748 L454 748" class="bus-a"/><path d="M216 325 L292 325 L292 774 L454 774" class="bus-a"/><path d="M24 185 L4 185 L4 800 L454 800" class="bus-a"/><path d="M216 220 L324 220 L324 826 L454 826" class="bus-a"/><path d="M216 185 L356 185 L356 852 L454 852" class="bus-a"/><path d="M24 150 L0 150 L0 878 L454 878" class="bus-a"/>
 
-<!-- Wires: U2 → Teensy -->
-<line x1="360" y1="428" x2="440" y2="428" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="446" x2="440" y2="446" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="464" x2="440" y2="464" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="482" x2="440" y2="482" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="500" x2="440" y2="500" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="518" x2="440" y2="518" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="536" x2="440" y2="536" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
-<line x1="360" y1="554" x2="440" y2="554" stroke="#85B7EB" stroke-width="0.8" opacity="0.7"/>
+<!-- DATA BUS — 12px spacing between each trace -->
+<path d="M24 500 L0 500 L0 1060 L1040 1060 L1040 600 L1016 600" class="bus-d"/>
+<path d="M24 535 L12 535 L12 1072 L1052 1072 L1052 630 L1016 630" class="bus-d"/>
+<path d="M24 570 L24 570 L24 1084 L1064 1084 L1064 660 L1016 660" class="bus-d"/>
+<path d="M216 605 L240 605 L240 1096 L1076 1096 L1076 690 L1016 690" class="bus-d"/>
+<path d="M216 570 L254 570 L254 1108 L1088 1108 L1088 720 L1016 720" class="bus-d"/>
+<path d="M216 535 L268 535 L268 1120 L1100 1120 L1100 750 L1016 750" class="bus-d"/>
+<path d="M216 500 L282 500 L282 1132 L1112 1132 L1112 780 L1016 780" class="bus-d"/>
+<path d="M216 465 L296 465 L296 1144 L1124 1144 L1124 810 L1016 810" class="bus-d"/>
+<text class="note" x="600" y="1056" style="fill:#639922">D0–D7 data bus — direct, no buffer (3.3V meets 5V TTL VIH)</text>
 
-<!-- Data bus -->
-<rect class="box-green" x="440" y="340" width="140" height="48" rx="6" stroke-width="0.5"/>
-<text class="t-green" x="510" y="360" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500">D0–D7 direct</text>
-<text class="ts" x="510" y="376" text-anchor="middle" dominant-baseline="central">pins 14–21</text>
-<line x1="160" y1="352" x2="440" y2="364" stroke="#97C459" stroke-width="1.2" opacity="0.6" stroke-dasharray="4 3"/>
-<text class="ts" x="300" y="344">no buffer needed</text>
+<!-- CONTROL -->
+<path d="M216 360 L240 360 L240 880 L710 880" class="ctrl"/><rect x="710" y="874" width="44" height="12" rx="2" class="res"/><text class="note" x="732" y="870" text-anchor="middle">R1 1kΩ</text><path d="M754 880 L804 880" class="ctrl"/>
+<path d="M216 430 L236 430 L236 910 L710 910" class="ctrl"/><rect x="710" y="904" width="44" height="12" rx="2" class="res"/><text class="note" x="732" y="900" text-anchor="middle">R2 1kΩ</text><path d="M754 910 L804 910" class="ctrl"/>
 
-<!-- /OE -->
-<rect class="box-coral" x="440" y="580" width="140" height="30" rx="6" stroke-width="0.5"/>
-<text class="t-coral" x="510" y="600" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500">/OE → pin 29</text>
-<line x1="160" y1="538" x2="190" y2="595" stroke="#F0997B" stroke-width="0.8" opacity="0.8"/>
-<rect x="190" y="590" width="50" height="10" rx="3" fill="none" stroke="#F0997B" stroke-width="0.8"/>
-<text class="ts" x="215" y="587" text-anchor="middle">R1 1kΩ</text>
-<line x1="240" y1="595" x2="440" y2="595" stroke="#F0997B" stroke-width="0.8" opacity="0.8"/>
+<!-- +5V -->
+<path d="M216 150 L240 150 L240 56 L1026 56 L1026 150 L1016 150" class="pwr"/>
+<text class="lbl" x="620" y="52" text-anchor="middle" style="fill:#BA7517">+5V rail (from ECU Vcc, DIP pin 28)</text>
 
-<!-- /CE -->
-<rect class="box-coral" x="440" y="618" width="140" height="30" rx="6" stroke-width="0.5"/>
-<text class="t-coral" x="510" y="638" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500">/CE → pin 30</text>
-<line x1="160" y1="578" x2="190" y2="633" stroke="#F0997B" stroke-width="0.8" opacity="0.8"/>
-<rect x="190" y="628" width="50" height="10" rx="3" fill="none" stroke="#F0997B" stroke-width="0.8"/>
-<text class="ts" x="215" y="625" text-anchor="middle">R2 1kΩ</text>
-<line x1="240" y1="633" x2="440" y2="633" stroke="#F0997B" stroke-width="0.8" opacity="0.8"/>
+<!-- 3.3V RAIL — Teensy 3.3V out → U1 pin 20, U2 pin 20 -->
+<path d="M1016 180 L1150 180 L1150 1050 L440 1050 L440 670" class="pwr33"/>
+<path d="M440 1050 L440 200" class="pwr33"/>
+<circle cx="440" cy="670" r="2.5" class="junc"/>
+<circle cx="440" cy="200" r="2.5" class="junc"/>
+<path d="M440 200 L470 200 L470 186 L620 186" class="pwr33"/>
+<text class="note" x="436" y="196" text-anchor="end" style="fill:#1D9E75">3.3V</text>
+<path d="M440 670 L470 670 L470 656 L620 656" class="pwr33"/>
+<text class="note" x="436" y="666" text-anchor="end" style="fill:#1D9E75">3.3V</text>
+<text class="lbl" x="1150" y="620" text-anchor="middle" style="fill:#1D9E75" transform="rotate(90,1150,620)">3.3V rail from Teensy</text>
+<line x1="1030" y1="195" x2="1030" y2="206" class="cap" fill="none"/><line x1="1022" y1="206" x2="1038" y2="206" class="cap" fill="none"/><line x1="1022" y1="210" x2="1038" y2="210" class="cap" fill="none"/><line x1="1030" y1="210" x2="1030" y2="221" class="cap" fill="none"/><text class="note" x="1046" y="212">C3 0.1µF</text>
 
-<!-- Power -->
-<rect class="box-amber" x="440" y="120" width="140" height="48" rx="6" stroke-width="0.5"/>
-<text class="t-amber" x="510" y="140" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500">Vcc → Vin</text>
-<text class="ts-amber" x="510" y="156" text-anchor="middle" dominant-baseline="central">5V from ECU</text>
-<line x1="160" y1="418" x2="440" y2="144" stroke="#EF9F27" stroke-width="1.2" opacity="0.6"/>
+<!-- GND -->
+<text class="note" x="24" y="620" style="fill:#888780">⏚ GND</text>
+<text class="note" x="806" y="163" style="fill:#888780">⏚</text>
+<text class="note" x="806" y="993" style="fill:#888780">⏚</text>
 
-<rect class="box-gray" x="440" y="170" width="140" height="18" rx="4" stroke-width="0.5"/>
-<text class="t-gray" x="510" y="183" text-anchor="middle" dominant-baseline="central" font-size="12">GND common</text>
-<line x1="160" y1="392" x2="440" y2="179" stroke="#B4B2A9" stroke-width="1" opacity="0.5"/>
+<!-- BUTTON -->
+<path d="M804 950 L770 950" class="wire"/><circle cx="766" cy="950" r="4" fill="none" stroke="#3d3d3a" stroke-width="0.8"/><line x1="758" y1="946" x2="758" y2="954" class="wire"/><text class="note" x="746" y="953" text-anchor="end">SW1</text><path d="M750 950 L730 950 L730 980 L804 980" class="gnd-w"/><text class="note" x="726" y="983" text-anchor="end" style="fill:#888780">⏚</text>
 
-<!-- Legend -->
-<text class="ts" x="40" y="676" dominant-baseline="central">Legend:</text>
-<line x1="100" y1="676" x2="130" y2="676" stroke="#5DCAA5" stroke-width="1.5"/>
-<text class="ts" x="136" y="676" dominant-baseline="central">5V address</text>
-<line x1="230" y1="676" x2="260" y2="676" stroke="#85B7EB" stroke-width="1.5"/>
-<text class="ts" x="266" y="676" dominant-baseline="central">3.3V address</text>
-<line x1="380" y1="676" x2="410" y2="676" stroke="#97C459" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text class="ts" x="416" y="676" dominant-baseline="central">data (direct)</text>
-<line x1="520" y1="676" x2="550" y2="676" stroke="#F0997B" stroke-width="1.5"/>
-<text class="ts" x="556" y="676" dominant-baseline="central">control</text>
-
-<text class="ts" x="200" y="694" dominant-baseline="central">Both 74HCT245: Vcc=3.3V, DIR=GND, /OE=GND — C1, C2, C3: 0.1µF bypass caps on 3.3V rail</text>
+<!-- LEGEND -->
+<rect x="40" y="1180" width="1120" height="44" rx="6" fill="none" stroke="#ddd" stroke-width="0.5"/>
+<line x1="60" y1="1200" x2="90" y2="1200" class="bus-a" stroke-width="1.2"/><text class="note" x="96" y="1203">Address (via 245)</text>
+<line x1="240" y1="1200" x2="270" y2="1200" class="bus-d" stroke-width="1.2"/><text class="note" x="276" y="1203">Data (direct)</text>
+<line x1="400" y1="1200" x2="430" y2="1200" class="ctrl" stroke-width="1.2"/><text class="note" x="436" y="1203">Control (1kΩ)</text>
+<line x1="570" y1="1200" x2="600" y2="1200" class="pwr" stroke-width="1.2"/><text class="note" x="606" y="1203">+5V power</text>
+<line x1="720" y1="1200" x2="750" y2="1200" class="pwr33" stroke-width="1.2"/><text class="note" x="756" y="1203">3.3V rail</text>
+<line x1="860" y1="1200" x2="890" y2="1200" class="gnd-w" stroke-width="1.2"/><text class="note" x="896" y="1203">Ground</text>
 </svg>
