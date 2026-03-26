@@ -142,7 +142,8 @@ class TeensyEprom:
             print(f"ERROR: file not found: {filepath}")
             return False
 
-        data = open(filepath, "rb").read()
+        with open(filepath, "rb") as f:
+            data = f.read()
         size = len(data)
         filename = os.path.basename(filepath)
 

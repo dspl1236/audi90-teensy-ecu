@@ -78,11 +78,24 @@ static const uint8_t PIN_BUTTON = 31;  // Momentary switch, active LOW (pull-up)
 static const uint8_t PIN_LED    = 13;  // Onboard Teensy LED
 
 // ---------------------------------------------------------------------------
+// Data bus buffering (v2.1 hardware option)
+//
+// Set true if U3 74HCT245 is installed on the data bus.
+// U3: Vcc=5V, DIR=HIGH (B→A), /OE tied to EPROM /OE
+//   → provides 5V output levels, automatic tri-state, input protection
+//   → ISR no longer needs to manage data bus direction or busy-wait
+//
+// Set false (default) for v2.0 breadboard builds with direct data bus.
+// ---------------------------------------------------------------------------
+#define DATA_BUS_BUFFERED    false
+
+// ---------------------------------------------------------------------------
 // Timing
 // ---------------------------------------------------------------------------
 #define DEBOUNCE_MS          50
 #define LED_BLINK_MS         200
 #define BUTTON_HOLD_MS       1000     // Hold for previous map
+#define ISR_TIMEOUT_US       100      // Busy-wait ceiling (prevents hang if /OE stuck)
 
 // ---------------------------------------------------------------------------
 // USB upload protocol
@@ -93,6 +106,7 @@ static const uint8_t PIN_LED    = 13;  // Onboard Teensy LED
 // ---------------------------------------------------------------------------
 #define UPLOAD_TIMEOUT_MS    5000
 #define SERIAL_BAUD          115200
+#define CMD_BUF_SIZE         128       // Fixed serial command buffer
 
 // ---------------------------------------------------------------------------
 // Ident

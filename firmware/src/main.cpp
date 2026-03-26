@@ -70,12 +70,23 @@ FASTRUN void oe_isr() {
     uint16_t addr = read_address();
     uint8_t  val  = g_rom[addr & 0xFFFF];
 
+#if DATA_BUS_BUFFERED
+    // U3 74HCT245 handles tri-state via /OE — just write data
+    write_data(val);
+#else
+    // Direct data bus — must manage direction and hold until /OE released
     data_bus_output();
     write_data(val);
 
-    while (!digitalReadFast(PIN_OE)) { /* hold until /OE released */ }
+    // Wait for /OE HIGH with timeout to prevent hang if /OE stuck
+    uint32_t t0 = ARM_DWT_CYCCNT;
+    uint32_t limit = ISR_TIMEOUT_US * (F_CPU / 1000000);
+    while (!digitalReadFast(PIN_OE)) {
+        if ((ARM_DWT_CYCCNT - t0) > limit) break;
+    }
 
     data_bus_hiZ();
+#endif
 }
 
 // =============================================================================
@@ -118,15 +129,18 @@ static bool load_rom_from_file(FS& fs, const char* filename) {
     g_emulating = false;
     noInterrupts();
 
-    f.read((uint8_t*)g_rom, ROM_ACTIVE_SIZE);
+    // Read into temp buffer to avoid casting away volatile
+    uint8_t tmp[ROM_ACTIVE_SIZE];
+    f.read(tmp, ROM_ACTIVE_SIZE);
+    for (uint32_t i = 0; i < ROM_ACTIVE_SIZE; i++) g_rom[i] = tmp[i];
 
     if (sz >= ROM_SIZE) {
         // Full 64KB — read upper half
-        f.read((uint8_t*)g_rom + ROM_ACTIVE_SIZE, ROM_ACTIVE_SIZE);
+        f.read(tmp, ROM_ACTIVE_SIZE);
+        for (uint32_t i = 0; i < ROM_ACTIVE_SIZE; i++) g_rom[ROM_ACTIVE_SIZE + i] = tmp[i];
     } else {
         // 32KB — mirror into upper half (A15-agnostic)
-        memcpy((uint8_t*)g_rom + ROM_ACTIVE_SIZE,
-               (uint8_t*)g_rom, ROM_ACTIVE_SIZE);
+        for (uint32_t i = 0; i < ROM_ACTIVE_SIZE; i++) g_rom[ROM_ACTIVE_SIZE + i] = g_rom[i];
     }
 
     interrupts();
@@ -226,12 +240,9 @@ static void led_blink(uint8_t count, uint16_t on_ms = LED_BLINK_MS) {
     }
 }
 
-static void led_error() {
-    // Fast blink forever — unrecoverable error
-    while (true) {
-        digitalWriteFast(PIN_LED, HIGH); delay(50);
-        digitalWriteFast(PIN_LED, LOW);  delay(50);
-    }
+static void led_error_signal() {
+    // 10 fast blinks = load error (but don't block — allow USB recovery)
+    led_blink(10, 50);
 }
 
 // =============================================================================
@@ -450,13 +461,23 @@ static void cmd_upload(const String& args) {
     }
 }
 
+static bool parse_index(const String& args, int& idx) {
+    if (args.length() == 0 || !isDigit(args.charAt(0))) {
+        Serial.println("ERR: expected numeric index");
+        return false;
+    }
+    idx = args.toInt();
+    return true;
+}
+
 static void cmd_download(const String& args) {
     if (!g_lfs_ok && !g_sd_ok) {
         Serial.println("ERR: no filesystem");
         return;
     }
 
-    int idx = args.toInt();
+    int idx;
+    if (!parse_index(args, idx)) return;
     if (idx < 0 || idx >= g_mapCount) {
         Serial.println("ERR: bad index");
         return;
@@ -498,7 +519,8 @@ static void cmd_delete(const String& args) {
         return;
     }
 
-    int idx = args.toInt();
+    int idx;
+    if (!parse_index(args, idx)) return;
     if (idx < 0 || idx >= g_mapCount) {
         Serial.println("ERR: bad index");
         return;
@@ -580,15 +602,23 @@ static void usb_command(const String& cmd) {
 }
 
 static void usb_read() {
-    static String buf;
+    static char buf[CMD_BUF_SIZE];
+    static uint8_t buf_len = 0;
     while (Serial.available()) {
         char c = (char)Serial.read();
         if (c == '\n' || c == '\r') {
-            buf.trim();
-            if (buf.length()) usb_command(buf);
-            buf = "";
-        } else {
-            buf += c;
+            if (buf_len > 0) {
+                buf[buf_len] = '\0';
+                // Trim leading/trailing spaces
+                char* start = buf;
+                while (*start == ' ') start++;
+                char* end = buf + buf_len - 1;
+                while (end > start && *end == ' ') *end-- = '\0';
+                if (*start) usb_command(String(start));
+            }
+            buf_len = 0;
+        } else if (buf_len < CMD_BUF_SIZE - 1) {
+            buf[buf_len++] = c;
         }
     }
 }
@@ -606,10 +636,20 @@ void setup() {
     pinMode(PIN_LED, OUTPUT);
     digitalWriteFast(PIN_LED, LOW);
     for (uint8_t i = 0; i < 16; i++) pinMode(ADDR_PINS[i], INPUT);
+#if DATA_BUS_BUFFERED
+    // U3 74HCT245 handles tri-state — keep data pins as OUTPUT permanently
+    data_bus_output();
+    write_data(0xFF);
+#else
     data_bus_hiZ();
+#endif
     pinMode(PIN_OE, INPUT);
     pinMode(PIN_CE, INPUT);
     pinMode(PIN_BUTTON, INPUT_PULLUP);
+
+    // Enable cycle counter for ISR timeout
+    ARM_DEMCR |= ARM_DEMCR_TRCENA;
+    ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 
     // -- LittleFS (primary) --
     Serial.print("LittleFS: ");
@@ -632,10 +672,12 @@ void setup() {
     if (g_mapCount == 0) {
         Serial.println("No maps found — upload via USB: UPLOAD <name.bin> <size>");
         Serial.println("Waiting...");
-        // Don't error-halt — let user upload via USB
         led_blink(5, 100);  // fast blink = no maps but alive
+    } else if (!load_active_map()) {
+        Serial.println("ERR: failed to load map — upload a new one via USB");
+        led_error_signal();
+        // Fall through to loop() so USB commands still work
     } else {
-        if (!load_active_map()) led_error();
         attachInterrupt(digitalPinToInterrupt(PIN_OE), oe_isr, FALLING);
         Serial.println("EPROM active");
         led_blink(3, 300);
